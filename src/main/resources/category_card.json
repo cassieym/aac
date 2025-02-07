@@ -1,0 +1,111 @@
+[
+  {
+    "title": "Food",
+    "categories": [
+      {
+        "title": "Fruit",
+        "imageFile": "/images/publicdomainpictures/food/fruit/fruit_category.jpg",
+        "cards": [
+          {
+            "title": "Strawberry",
+            "text": "I want strawberry",
+            "imageFile": "/images/publicdomainpictures/food/fruit/strawberrys.jpg"
+          },
+          {
+            "title": "Blueberry",
+            "text": "I want blueberry",
+            "imageFile": "/images/publicdomainpictures/food/fruit/blueberrys.jpg"
+          },
+          {
+            "title": "Orange",
+            "text": "I want orange",
+            "imageFile": "/images/publicdomainpictures/food/fruit/oranges.jpg"
+          },
+          {
+            "title": "Apple",
+            "text": "I want apple",
+            "imageFile": "/images/publicdomainpictures/food/fruit/apples.jpg"
+          },
+          {
+            "title": "Cucumber",
+            "text": "I want some cucumber",
+            "imageFile": "/images/publicdomainpictures/food/fruit/cucumberavegetables.jpg"
+          }
+        ]
+      },
+      {
+        "title": "Sweet",
+        "imageFile": "/images/publicdomainpictures/food/sweet/sweet_category.jpg",
+        "cards": [
+          {
+            "title": "Cake",
+            "text": "I want a piece of cake",
+            "imageFile": "/images/publicdomainpictures/food/sweet/cakes.jpg"
+          },
+          {
+            "title": "Donut",
+            "text": "I want to eat donuts",
+            "imageFile": "/images/publicdomainpictures/food/sweet/donuts.jpg"
+          },
+          {
+            "title": "Chocolate",
+            "text": "I want some chocolates",
+            "imageFile": "/images/publicdomainpictures/food/sweet/chocolate.jpg"
+          },
+          {
+            "title": "Cookie",
+            "text": "I want some cookies",
+            "imageFile": "/images/publicdomainpictures/food/sweet/cookies.jpg"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Entertainment",
+    "categories": [
+      {
+        "title": "Movie",
+        "imageFile": "/images/publicdomainpictures/entertainment/movie/movie_category.jpg",
+        "cards": [
+          {
+            "title": "JAWS",
+            "text": "I want to watch the movie 'JAWS'",
+            "imageFile": "/images/publicdomainpictures/entertainment/movie/richard-dreyfuss.jpg"
+          },
+          {
+            "title": "King-Kong",
+            "text": "I want to watch the movie 'King Kong'",
+            "imageFile": "/images/publicdomainpictures/entertainment/movie/king-kong.jpg"
+          },
+          {
+            "title": "Old Yeller",
+            "text": "I want to watch the movie 'Old Yeller'",
+            "imageFile": "/images/publicdomainpictures/entertainment/movie/vintage-movie.jpg"
+          }
+        ]
+      },
+      {
+        "title": "Sport",
+        "imageFile": "/images/publicdomainpictures/entertainment/sport/sport_category.jpg",
+        "cards": [
+          {
+            "title": "Volleyball",
+            "text": "I want to watch volleyball",
+            "imageFile": "/images/publicdomainpictures/entertainment/sport/volleyball.jpg"
+          },
+          {
+            "title": "Basketball",
+            "text": "I want to watch basketball",
+            "imageFile": "/images/publicdomainpictures/entertainment/sport/basketball.jpg"
+          },
+          {
+            "title": "Football",
+            "text": "I want to watch football",
+            "imageFile": "/images/publicdomainpictures/entertainment/sport/football.jpg"
+          }
+        ]
+      }
+    ]
+  }
+]
