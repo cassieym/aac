@@ -4,6 +4,7 @@ import com.aac.device.model.Card;
 import com.aac.device.model.Category;
 import com.aac.device.model.CategoryGroup;
 import com.aac.device.model.GridCell;
+import com.aac.device.utils.CategoryCardLoader;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,7 +19,6 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
-import javafx.stage.Stage;
 import com.sun.speech.freetts.Voice;
 import com.sun.speech.freetts.VoiceManager;
 import javafx.util.Duration;
@@ -32,7 +32,6 @@ import java.util.Timer;
 
 public class MainComponent {
     private AacController aacController;
-    private Stage stage;
 
     private int categoryGroupGridRows;
     private int categoryGroupGridColumns;
@@ -62,9 +61,12 @@ public class MainComponent {
     private Timer timer;
     private Timeline clickTimeline;
 
-    public MainComponent(AacController aacController, Stage stage) {
+    public MainComponent() {
+    }
+
+    public void setController(AacController aacController) {
         this.aacController = aacController;
-        this.stage = stage;
+        this.aacController.setMainComponent(this);
     }
 
     public void onKeyReleased(KeyEvent event) {
@@ -147,6 +149,10 @@ public class MainComponent {
         this.aacController.setDisplayText();
     }
 
+    public List<CategoryGroup> getCategoryGroups(){
+        return this.categoryGroups;
+    }
+
     public void load() throws Exception {
         aacController.setDisplayText("");
         //setup voices https://stackoverflow.com/questions/12684627/freetts-unable-to-find-any-voice
@@ -166,7 +172,7 @@ public class MainComponent {
         this.cardGridRows = cardGridPane.getRowCount();
         this.cardGridColumns = cardGridPane.getColumnCount();
 
-        categoryGroups = loadCategories();
+        categoryGroups = CategoryCardLoader.loadCategories();
 
         // populate grid
         for(int i = 0; i < categoryGroupGridRows; i++) {
@@ -504,23 +510,23 @@ public class MainComponent {
         }
     }
 
-    private List<CategoryGroup> loadCategories() throws Exception {
-        String categoryJson = getJsonOfCategories(); // stores JSON content in String
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false); // ignores extraneous JSON fields
-        return objectMapper.readValue(categoryJson, new TypeReference<List<CategoryGroup>>(){}); // converts string into list of CategoryGroup objects
-    }
-
-    private String getJsonOfCategories() throws IOException {
-        InputStream inStream = this.getClass().getResourceAsStream("/category_card.json"); // load JSON
-        BufferedReader br = new BufferedReader(new InputStreamReader(inStream));
-        StringBuilder stringBuilder = new StringBuilder();
-        String sCurrentLine;
-        while ((sCurrentLine = br.readLine()) != null) // reads file
-        {
-            stringBuilder.append(sCurrentLine).append("\n"); // new line
-        }
-        return stringBuilder.toString(); // returns JSON's content as string
-    }
+//    private List<CategoryGroup> loadCategories() throws Exception {
+//        String categoryJson = getJsonOfCategories(); // stores JSON content in String
+//        ObjectMapper objectMapper = new ObjectMapper();
+//        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false); // ignores extraneous JSON fields
+//        return objectMapper.readValue(categoryJson, new TypeReference<List<CategoryGroup>>(){}); // converts string into list of CategoryGroup objects
+//    }
+//
+//    private String getJsonOfCategories() throws IOException {
+//        InputStream inStream = this.getClass().getResourceAsStream("/category_card.json"); // load JSON
+//        BufferedReader br = new BufferedReader(new InputStreamReader(inStream));
+//        StringBuilder stringBuilder = new StringBuilder();
+//        String sCurrentLine;
+//        while ((sCurrentLine = br.readLine()) != null) // reads file
+//        {
+//            stringBuilder.append(sCurrentLine).append("\n"); // new line
+//        }
+//        return stringBuilder.toString(); // returns JSON's content as string
+//    }
 
 }

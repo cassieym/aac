@@ -1,6 +1,6 @@
 package com.aac.device;
 
-import javafx.event.ActionEvent;
+import com.aac.device.utils.SceneFactory;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -8,6 +8,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
@@ -29,6 +30,22 @@ public class AacController {
 
     @FXML
     private Button menuButton;
+    @FXML
+    private Button saveSettingsButton;
+    @FXML
+    private ListView cardsListView;
+    @FXML
+    private ListView categoryListView;
+
+    private Stage stage;
+    private Scene scene;
+    private Parent root;
+
+    private MainComponent mainComponent;
+
+    public void setMainComponent(MainComponent mainComponent) {
+        this.mainComponent = mainComponent;
+    }
 
     public void setDisplayText(String text) {
         if(text == null) {
@@ -57,19 +74,47 @@ public class AacController {
         return this.rightPane;
     }
 
+
+//    public void clickMenuButton(MouseEvent e) throws IOException{
+//        System.out.println("Clicked");
+//        try {
+//            FXMLLoader menuFXML = new FXMLLoader(AacApplication.class.getResource("settings.fxml"));
+//            stage = (Stage)((Node)e.getSource()).getScene().getWindow();
+////            this.stage.setTitle("Menu Window");
+//            scene = new Scene(menuFXML);
+//            stage.setScene(new Scene(menuFXML.load()));
+//            stage.show();
+//
+//            SettingsController controller = menuFXML.getController();
+//            controller.setMainComponent(this.mainComponent);
+//
+//            // Hide this current window (if this is what you want)
+////            ((Node)(e.getSource())).getScene().getWindow().hide();
+//
+//
+//        } catch (IOException ex) {
+//            throw new RuntimeException(ex);
+//        }
+//    }
+
     public void clickMenuButton(MouseEvent e){
         System.out.println("Clicked");
         try {
-            FXMLLoader menuFXML = new FXMLLoader(AacApplication.class.getResource("settings.fxml"));
-            Stage stage = new Stage();
-            stage.setTitle("Menu Window");
-            stage.setScene(new Scene(menuFXML.load(), 450, 450));
+            root = FXMLLoader.load(AacApplication.class.getResource("settings.fxml"));
+            stage = (Stage)((Node)e.getSource()).getScene().getWindow();
+            scene = new Scene(root);
+            stage.setScene(scene);
             stage.show();
-            // Hide this current window (if this is what you want)
-            ((Node)(e.getSource())).getScene().getWindow().hide();
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
     }
 
+    public void clickSaveButton(MouseEvent f) throws IOException {
+        System.out.println("Saved");
+        stage = (Stage)((Node)f.getSource()).getScene().getWindow();
+        SceneFactory.createMainWindow(stage);
+    }
 }
+
+
