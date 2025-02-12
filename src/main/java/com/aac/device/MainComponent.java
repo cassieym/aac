@@ -7,7 +7,8 @@ import com.aac.device.model.GridCell;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import javafx.application.Platform;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.scene.Node;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
@@ -20,6 +21,7 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import com.sun.speech.freetts.Voice;
 import com.sun.speech.freetts.VoiceManager;
+import javafx.util.Duration;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -27,7 +29,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Timer;
-import java.util.TimerTask;
 
 public class MainComponent {
     private AacController aacController;
@@ -41,7 +42,7 @@ public class MainComponent {
     private int cardGridColumns;
 
     private static final String CELL_STYLE = "-fx-background-color: white; -fx-border-color: grey; -fx-border-width: 2; -fx-alignment: center;";
-    private static final long DOUBLE_CLICK_MAX_INTERVAL = 800; // double click timer in ms
+    private static final long MULTI_CLICK_MAX_INTERVAL = 800; // double click timer in ms
 
     private Node activeNode = null;
 
@@ -54,12 +55,12 @@ public class MainComponent {
     private NavigationLevel navigationLevel = NavigationLevel.CATEGORY_GROUP;
 
     private List<CategoryGroup> categoryGroups;
-
-    private KeyCode previousKeyCode = KeyCode.ESCAPE;
-    private long previousReleaseKeyTime = 0;
     private boolean enableVoice = true;
+    private int clickCount = 0;
+    private long lastClickTime = 0;
 
     private Timer timer;
+    private Timeline clickTimeline;
 
     public MainComponent(AacController aacController, Stage stage) {
         this.aacController = aacController;
@@ -67,40 +68,83 @@ public class MainComponent {
     }
 
     public void onKeyReleased(KeyEvent event) {
-        cancelTimer();
-        if(event.getCode() == KeyCode.RIGHT || event.getCode() == KeyCode.LEFT) {
-            // check for a double click event (same key pressed twice within a specific time frame)
-            if(this.previousKeyCode == event.getCode() && (System.currentTimeMillis() - this.previousReleaseKeyTime) < DOUBLE_CLICK_MAX_INTERVAL) {
-                //reset previous key event
-                this.previousKeyCode = KeyCode.ESCAPE;
-                if(event.getCode() == KeyCode.RIGHT )  // right key double click
-                    selectCurrentCell();
-                else
-                    moveUp();   // left key double click
-            }
-            else {
-                this.previousKeyCode = event.getCode();
-                timer = new Timer();
-                timer.scheduleAtFixedRate(new TimerTask() {
-                    @Override
-                    public void run() {
-                        Platform.runLater(() -> {
-                            if(event.getCode() == KeyCode.RIGHT ) {  // right key single click
-                                moveRight();
-                            }
-                            else {
-                                moveLeft();   // left key single click
-                            }
-                        });
-                    }
-                }, DOUBLE_CLICK_MAX_INTERVAL, 300000);
-            }
-        }
-        else {
-            this.previousKeyCode = event.getCode();
-        }
+        long currentTime = System.currentTimeMillis();
 
-        this.previousReleaseKeyTime = System.currentTimeMillis();
+        if (event.getCode() == KeyCode.RIGHT || event.getCode() == KeyCode.LEFT) {
+            if (currentTime - lastClickTime > MULTI_CLICK_MAX_INTERVAL) {  // reset click count if time between clicks exceeds 800ms
+                clickCount = 0;
+            }
+
+            clickCount++;
+            lastClickTime = currentTime;
+
+            // cancel any previously scheduled timeline to avoid premature single click execution
+            if (clickTimeline != null) {
+                clickTimeline.stop();
+            }
+
+            // delay processing for full click sequence (single, double, or triple)
+            clickTimeline = new Timeline(new KeyFrame(Duration.millis(MULTI_CLICK_MAX_INTERVAL), e -> {
+                if (clickCount == 1) {
+                    if (event.getCode() == KeyCode.RIGHT) {
+                        moveRight();  // Single right click
+                    } else {
+                        moveLeft();  // Single left click
+                    }
+                } else if (clickCount == 2) {
+                    if (event.getCode() == KeyCode.RIGHT) {
+                        selectCurrentCell();  // Double right click - select
+                    }
+                    else if (event.getCode() == KeyCode.LEFT) {
+                        moveUp(); // Double left click - move up hierarchy
+                    }
+                } else if (clickCount == 3) {
+                    clearText();  // Triple click
+                }
+                clickCount = 0; // Reset after handling the action
+            }));
+            clickTimeline.setCycleCount(1);
+            clickTimeline.play(); // executes action after waiting 800ms
+        }
+//        cancelTimer();
+//        if(event.getCode() == KeyCode.RIGHT || event.getCode() == KeyCode.LEFT) {
+//            // check for a double click event (same key pressed twice within a specific time frame)
+//            if(this.previousKeyCode == event.getCode() && (System.currentTimeMillis() - this.previousReleaseKeyTime) < DOUBLE_CLICK_MAX_INTERVAL) {
+//                //reset previous key event
+//                this.previousKeyCode = KeyCode.ESCAPE;
+//                if (event.getCode() == KeyCode.RIGHT)  // right key double click
+//                    selectCurrentCell();
+//                else
+//                    moveUp();   // left key double click
+//
+//            }
+//            else {
+//                this.previousKeyCode = event.getCode();
+//                timer = new Timer();
+//                timer.scheduleAtFixedRate(new TimerTask() {
+//                    @Override
+//                    public void run() {
+//                        Platform.runLater(() -> {
+//                            if(event.getCode() == KeyCode.RIGHT ) {  // right key single click
+//                                moveRight();
+//                            }
+//                            else {
+//                                moveLeft();   // left key single click
+//                            }
+//                        });
+//                    }
+//                }, DOUBLE_CLICK_MAX_INTERVAL, 300000);
+//            }
+//        }
+//        else {
+//            this.previousKeyCode = event.getCode();
+//        }
+//
+//        this.previousReleaseKeyTime = System.currentTimeMillis();
+    }
+
+    private void clearText() {
+        this.aacController.setDisplayText();
     }
 
     public void load() throws Exception {
@@ -150,34 +194,34 @@ public class MainComponent {
 
     private void moveRight() {
         cancelTimer();
-        if(this.navigationLevel == NavigationLevel.CATEGORY_GROUP) {
+        if(this.navigationLevel == NavigationLevel.CATEGORY_GROUP) {  // navigationLevel == NavigationLevel.CATEGORY_GROUP
             if(this.categoryGroups.size() > 1) {
-                if(this.currentCategoryGroupIndex < this.categoryGroups.size() -1) {
+                if(this.currentCategoryGroupIndex < this.categoryGroups.size() - 1) { // index starts at 0
                     this.currentCategoryGroupIndex++;
                 }
                 else {
-                    this.currentCategoryGroupIndex = 0;
+                    this.currentCategoryGroupIndex = 0;  // last category_group returns to first (wrap)
                 }
                 // Reset
                 this.currentCategoryIndex = 0;
                 this.currentCardIndex = 0;
-                this.refresh(true);
+                this.refresh(true); // refresh UI
             }
         }
-        else {
+        else { // navigationLevel == NavigationLevel.CATEGORY
             CategoryGroup categoryGroup = this.categoryGroups.get(this.currentCategoryGroupIndex);
             List<Category> categories = categoryGroup.getCategories();
             if(this.navigationLevel == NavigationLevel.CATEGORY) {
                 if(categories.size() > 1) {
                     if(this.currentCategoryIndex < categories.size() -1) {
-                        this.currentCategoryIndex++;
+                        this.currentCategoryIndex++; // move to next category
                     }
                     else {
-                        this.currentCategoryIndex = 0;
+                        this.currentCategoryIndex = 0;  // wrap to start
                     }
                     // Reset
                     this.currentCardIndex = 0;
-                    this.refresh(true);
+                    this.refresh(true); // refresh UI
                 }
             }
             else { // navigationLevel == NavigationLevel.CARD
@@ -185,16 +229,15 @@ public class MainComponent {
                 List<Card> cards = category.getCards();
                 if(cards.size() > 1) {
                     if(this.currentCardIndex < cards.size() -1) {
-                        this.currentCardIndex++;
+                        this.currentCardIndex++; // move to next card
                     }
                     else {
-                        this.currentCardIndex = 0;
+                        this.currentCardIndex = 0; // wrap to start
                     }
-                    this.refresh(false);
+                    this.refresh(false); // refresh
                 }
             }
         }
-        //System.out.println("moveRight()");
     }
 
     private void moveLeft() {
@@ -240,7 +283,6 @@ public class MainComponent {
                 }
             }
         }
-        //System.out.println("moveLeft()");
     }
 
     private void selectCurrentCell() {
@@ -265,7 +307,6 @@ public class MainComponent {
             Card card = cards.get(this.currentCardIndex);
             playCard(card.getText());
         }
-        //System.out.println("selectCurrentCell()");
     }
 
     private void moveUp() {
@@ -280,7 +321,6 @@ public class MainComponent {
             this.currentCardIndex = 0;
             this.refresh(true);
         }
-        //System.out.println("moveUp()");
     }
 
     private void playCard(String text) {
@@ -301,7 +341,7 @@ public class MainComponent {
                     voice.deallocate();
                 }
             } catch (Exception ex) {
-                //Ingore
+                //Ignore
             }
         }
     }
@@ -339,7 +379,7 @@ public class MainComponent {
             this.loadCards();
         }
         this.updateHighlight();
-        this.aacController.setDisplayText("");
+//        this.aacController.setDisplayText("");
 
     }
 
@@ -451,7 +491,6 @@ public class MainComponent {
             double factor = Math.min(cellWidth/imageWidth, cellHeight/ imageHeight) * 0.85;
             if (Double.isFinite(factor) && factor > 0) {
                 StackPane stackPane = new StackPane();
-                //stackPane.setMaxSize(cellWidth, cellHeight);
                 stackPane.setStyle(CELL_STYLE);
                 ImageView imageView = new ImageView(image);
                 imageView.setFitHeight(factor * imageHeight);
@@ -466,22 +505,22 @@ public class MainComponent {
     }
 
     private List<CategoryGroup> loadCategories() throws Exception {
-        String categoryJson = getJsonOfCategories();
+        String categoryJson = getJsonOfCategories(); // stores JSON content in String
         ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        return objectMapper.readValue(categoryJson, new TypeReference<List<CategoryGroup>>(){});
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false); // ignores extraneous JSON fields
+        return objectMapper.readValue(categoryJson, new TypeReference<List<CategoryGroup>>(){}); // converts string into list of CategoryGroup objects
     }
 
     private String getJsonOfCategories() throws IOException {
-        InputStream inStream = this.getClass().getResourceAsStream("/category_card.json");
+        InputStream inStream = this.getClass().getResourceAsStream("/category_card.json"); // load JSON
         BufferedReader br = new BufferedReader(new InputStreamReader(inStream));
         StringBuilder stringBuilder = new StringBuilder();
         String sCurrentLine;
-        while ((sCurrentLine = br.readLine()) != null)
+        while ((sCurrentLine = br.readLine()) != null) // reads file
         {
-            stringBuilder.append(sCurrentLine).append("\n");
+            stringBuilder.append(sCurrentLine).append("\n"); // new line
         }
-        return stringBuilder.toString();
+        return stringBuilder.toString(); // returns JSON's content as string
     }
 
 }

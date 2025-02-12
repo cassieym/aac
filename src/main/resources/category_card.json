@@ -8,27 +8,27 @@
         "cards": [
           {
             "title": "Strawberry",
-            "text": "I want strawberry",
+            "text": "Strawberry",
             "imageFile": "/images/publicdomainpictures/food/fruit/strawberrys.jpg"
           },
           {
             "title": "Blueberry",
-            "text": "I want blueberry",
+            "text": "Blueberry",
             "imageFile": "/images/publicdomainpictures/food/fruit/blueberrys.jpg"
           },
           {
             "title": "Orange",
-            "text": "I want orange",
+            "text": "Orange",
             "imageFile": "/images/publicdomainpictures/food/fruit/oranges.jpg"
           },
           {
             "title": "Apple",
-            "text": "I want apple",
+            "text": "Apple",
             "imageFile": "/images/publicdomainpictures/food/fruit/apples.jpg"
           },
           {
             "title": "Cucumber",
-            "text": "I want some cucumber",
+            "text": "Cucumber",
             "imageFile": "/images/publicdomainpictures/food/fruit/cucumberavegetables.jpg"
           }
         ]

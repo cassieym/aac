@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+
+<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.aac.device.SettingsController">
+   <children>
+      <VBox layoutX="62.0" layoutY="91.0" opacity="0.33" prefHeight="268.0" prefWidth="223.0" style="-fx-background-color: blue;" />
+      <HBox layoutX="62.0" layoutY="47.0" prefHeight="44.0" prefWidth="486.0">
+         <children>
+            <Label alignment="CENTER" prefHeight="44.0" prefWidth="229.0" text="Category" textAlignment="CENTER">
+               <font>
+                  <Font size="20.0" />
+               </font>
+            </Label>
+            <Pane prefHeight="44.0" prefWidth="50.0" />
+            <Label alignment="CENTER" prefHeight="43.0" prefWidth="225.0" text="Cards">
+               <font>
+                  <Font size="20.0" />
+               </font>
+            </Label>
+         </children>
+      </HBox>
+      <Button layoutX="505.0" layoutY="14.0" mnemonicParsing="false" text="settingSave" />
+      <ListView layoutX="328.0" layoutY="88.0" prefHeight="271.0" prefWidth="223.0" />
+      <HBox layoutX="329.0" layoutY="89.0" prefHeight="51.0" prefWidth="221.0" style="-fx-border-color: blue;">
+         <children>
+            <ImageView fitHeight="51.0" fitWidth="62.0" pickOnBounds="true" preserveRatio="true" x="5.0" />
+            <TextField alignment="CENTER" layoutX="30.0" layoutY="50.0" prefHeight="34.0" prefWidth="148.0" translateX="5.0" translateY="9.0" />
+         </children>
+      </HBox>
+      <HBox layoutX="329.0" layoutY="142.0" prefHeight="51.0" prefWidth="221.0" style="-fx-border-color: blue;">
+         <children>
+            <ImageView fitHeight="51.0" fitWidth="62.0" pickOnBounds="true" preserveRatio="true" x="5.0" />
+            <TextField alignment="CENTER" layoutX="30.0" layoutY="50.0" prefHeight="34.0" prefWidth="148.0" translateX="5.0" translateY="9.0" />
+         </children>
+      </HBox>
+      <HBox layoutX="329.0" layoutY="195.0" prefHeight="51.0" prefWidth="221.0" style="-fx-border-color: blue;">
+         <children>
+            <ImageView fitHeight="51.0" fitWidth="62.0" pickOnBounds="true" preserveRatio="true" x="5.0" />
+            <TextField alignment="CENTER" layoutX="30.0" layoutY="50.0" prefHeight="34.0" prefWidth="148.0" translateX="5.0" translateY="9.0" />
+         </children>
+      </HBox>
+   </children>
+</AnchorPane>

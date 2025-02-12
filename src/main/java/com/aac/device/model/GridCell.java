@@ -8,7 +8,6 @@ import lombok.Setter;
 
 import java.io.FileInputStream;
 
-
 @Data
 public class GridCell {
     private String title;
@@ -21,7 +20,6 @@ public class GridCell {
     private Image image;
 
     public Image getCellImage() {
-        Image image = null;
         if(image == null) {
             if(imageFile == null || imageFile.trim() == "") {
                 return null;
@@ -33,7 +31,6 @@ public class GridCell {
             catch(Exception ex) {
             }
         }
-
         return image;
     }
 }
