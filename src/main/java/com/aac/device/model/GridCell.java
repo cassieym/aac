@@ -1,5 +1,6 @@
 package com.aac.device.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import javafx.scene.image.Image;
 import lombok.AccessLevel;
 import lombok.Data;
@@ -17,8 +18,10 @@ public class GridCell {
 
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
+    @JsonIgnore
     private Image image;
 
+    @JsonIgnore
     public Image getCellImage() {
         if(image == null) {
             if(imageFile == null || imageFile.trim() == "") {

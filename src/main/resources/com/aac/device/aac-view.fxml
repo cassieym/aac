@@ -21,7 +21,7 @@
          <children>
             <Label fx:id="displayText" prefHeight="80.0" prefWidth="1039.0" style="-fx-border-color:black; -fx-border-width: 3; -fx-border-style: solid; -fx-padding: 5; -fx-border-radius: 25;" />
             <Pane prefHeight="82.0" prefWidth="156.0" />
-            <Button fx:id="menuButton" mnemonicParsing="false" onMouseClicked="#clickMenuButton" prefHeight="43.0" prefWidth="254.0" text="Menu">
+            <Button fx:id="settingButton" mnemonicParsing="false" onMouseClicked="#clickMenuButton" prefHeight="43.0" prefWidth="254.0" text="Settings">
                <font>
                   <Font size="20.0" />
                </font>

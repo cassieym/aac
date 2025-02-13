@@ -11,9 +11,14 @@ import javafx.stage.Stage;
 import java.io.IOException;
 
 public class SceneFactory {
-    public static void createMainWindow(Stage stage) throws IOException {
+    public static void createMainWindow(Stage stage)  {
         FXMLLoader fxmlLoader = new FXMLLoader(AacApplication.class.getResource("aac-view.fxml"));
-        Scene scene = new Scene(fxmlLoader.load());
+        Scene scene = null;
+        try {
+            scene = new Scene(fxmlLoader.load());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         stage.setTitle("AAC Device");
         stage.setScene(scene);
 

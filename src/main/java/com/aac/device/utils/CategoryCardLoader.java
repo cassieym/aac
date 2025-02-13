@@ -29,6 +29,27 @@ public class CategoryCardLoader {
         }
     }
 
+    /*private void loadCategory(GridPane categoryGroupPane, CategoryGroup categoryGroup) {
+        List<Category> categories = categoryGroup.getCategories();
+        double cellWidth =(categoryGroupPane.getWidth() - categoryGroupPane.getPadding().getLeft() - categoryGroupPane.getPadding().getRight())/this.categoryGridColumns;
+        double cellHeight =(categoryGroupPane.getHeight() - categoryGroupPane.getPadding().getTop() - categoryGroupPane.getPadding().getBottom())/this.categoryGridColumns;
+
+        for(int i = 0; i < categoryGridRows; i++) {
+            for(int j = 0; j < categoryGridColumns; j++) {
+                int idx = i * categoryGroupGridRows + j;
+                if(idx < categories.size()) {
+                    Category category = categories.get(idx);
+                    category.setRowIndex(i);
+                    category.setColumnIndex(j);
+                    setGridCell(categoryGroupPane, cellWidth, cellHeight, category, category.getTitle());
+                }
+                else {
+                    break;
+                }
+            }
+        }
+    } */
+
     private static String getJsonOfCategories() throws IOException, URISyntaxException {
         File file = getCategoryFile();
         if(!file.exists()) {
