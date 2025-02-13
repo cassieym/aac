@@ -128,7 +128,7 @@ public class SettingsEditor {
         categoryBox.setStyle("-fx-padding: 0 0 0 20;");
 
         // Category header
-        HBox categoryHeader = new HBox(5);
+        HBox categoryHeader = new HBox(7);
         TextField categoryTitle = new TextField(category.getTitle());
         TextField categoryImage = new TextField(category.getImageFile());
         categoryTitle.setPrefWidth(200);
@@ -162,7 +162,15 @@ public class SettingsEditor {
             cardsBox.getChildren().add(cardBox);
         });
 
-        categoryHeader.getChildren().addAll(categoryTitle, categoryImage);
+
+        // Delete category button
+        Button deleteCategoryButton = new Button("Delete Category");
+        deleteCategoryButton.setOnAction(e -> {
+            categoryGroups.get(groupIndex).getCategories().remove(categoryIndex);
+            updateUI();
+        });
+
+        categoryHeader.getChildren().addAll(categoryTitle, categoryImage, deleteCategoryButton);
         categoryBox.getChildren().addAll(categoryHeader, categoryPane, addCardButton);
 
         return categoryBox;
