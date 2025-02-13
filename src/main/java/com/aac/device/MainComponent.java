@@ -366,7 +366,7 @@ public class MainComponent {
 
         for(int i = 0; i < categoryGridRows; i++) {
             for(int j = 0; j < categoryGridColumns; j++) {
-                int idx = i * categoryGroupGridRows + j;
+                int idx = i * categoryGridColumns + j;
                 if(idx < categories.size()) {
                     Category category = categories.get(idx);
                     category.setRowIndex(i);

@@ -38,10 +38,17 @@ public class SettingsEditor {
         // Create UI elements
         updateUI();
 
+        // Bottom buttons
+        HBox buttonContainer = new HBox(10);
+        mainContainer.getChildren().add(buttonContainer);
         // Save button
-        Button saveButton = new Button("Save Changes");
+        Button saveButton = new Button("Save");
         saveButton.setOnAction(e -> saveChanges(e));
-        mainContainer.getChildren().add(saveButton);
+        buttonContainer.getChildren().add(saveButton);
+        // Cancel button
+        Button cancelButton = new Button("Cancel");
+        cancelButton.setOnAction(e -> cancel(e));
+        buttonContainer.getChildren().add(cancelButton);
 
         scrollPane.setContent(mainContainer);
         scrollPane.setFitToWidth(true);
@@ -76,8 +83,11 @@ public class SettingsEditor {
         groupBox.getStyleClass().add("group-box");
         groupBox.setStyle("-fx-border-color: #ddd; -fx-border-radius: 5; -fx-padding: 10;");
 
+
         // Group header
         HBox groupHeader = new HBox(5);
+
+        // Title
         TextField groupTitle = new TextField(group.getTitle());
         groupTitle.setPrefWidth(200);
         groupTitle.textProperty().addListener((obs, old, newValue) -> {
@@ -95,7 +105,19 @@ public class SettingsEditor {
             categoriesBox.getChildren().add(categoryBox);
         }
 
-        groupHeader.getChildren().addAll(groupTitle);
+        // Add Category Button
+        Button addCategoryButton = new Button("Add Category");
+        addCategoryButton.setOnAction(e -> {
+            Category newCategory = new Category();
+            newCategory.setTitle("New Title");
+            newCategory.setCards(new ArrayList<>());
+            group.getCategories().add(newCategory);
+            int categoryIndex = group.getCategories().size() - 1;
+            VBox categoryBox = createCategoryBox(newCategory, groupIndex, categoryIndex);
+            categoriesBox.getChildren().add(categoryBox);
+        });
+
+        groupHeader.getChildren().addAll(groupTitle, addCategoryButton);
         groupBox.getChildren().addAll(groupHeader, groupPane);
 
         return groupBox;
@@ -191,6 +213,11 @@ public class SettingsEditor {
             showAlert("Error saving changes: " + e.getMessage());
         }
 
+        Stage stage = (Stage)((Node)event.getSource()).getScene().getWindow();
+        SceneFactory.createMainWindow(stage);
+    }
+
+    private void cancel(ActionEvent event) {
         Stage stage = (Stage)((Node)event.getSource()).getScene().getWindow();
         SceneFactory.createMainWindow(stage);
     }
