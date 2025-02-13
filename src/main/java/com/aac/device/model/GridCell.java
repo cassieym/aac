@@ -8,6 +8,9 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.io.FileInputStream;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 
 @Data
 public class GridCell {
@@ -21,6 +24,11 @@ public class GridCell {
     @JsonIgnore
     private Image image;
 
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    @JsonIgnore
+    private static Image defaultImage;
+
     @JsonIgnore
     public Image getCellImage() {
         if(image == null) {
@@ -28,12 +36,40 @@ public class GridCell {
                 return null;
             }
             try {
-                FileInputStream imageInputStream = new FileInputStream(this.getClass().getResource(imageFile).getPath());
-                image = new Image(imageInputStream);
+                if(isResourceFile()) {
+                    FileInputStream imageInputStream = new FileInputStream(this.getClass().getResource(imageFile).getPath());
+                    image = new Image(imageInputStream);
+                }
+                else {
+                    URL url = new URL(this.imageFile);
+                    URLConnection conn = url.openConnection();
+                    InputStream in = conn.getInputStream();
+                    image = new Image(in);
+                }
             }
             catch(Exception ex) {
+                image = getDefaultImage();
             }
         }
         return image;
+    }
+
+    private boolean isResourceFile() {
+        URL url = this.getClass().getResource(imageFile);
+        return url != null;
+    }
+
+    private Image getDefaultImage() {
+        if(defaultImage != null) {
+            return defaultImage;
+        }
+
+        try {
+            FileInputStream imageInputStream = new FileInputStream(this.getClass().getResource("/images/default.png").getPath());
+            defaultImage = new Image(imageInputStream);
+        }
+        catch(Exception e) {
+        }
+        return defaultImage;
     }
 }

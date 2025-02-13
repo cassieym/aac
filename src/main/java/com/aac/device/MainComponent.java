@@ -5,9 +5,8 @@ import com.aac.device.model.Category;
 import com.aac.device.model.CategoryGroup;
 import com.aac.device.model.GridCell;
 import com.aac.device.utils.CategoryCardLoader;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.speech.freetts.Voice;
+import com.sun.speech.freetts.VoiceManager;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.scene.Node;
@@ -19,14 +18,8 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
-import com.sun.speech.freetts.Voice;
-import com.sun.speech.freetts.VoiceManager;
 import javafx.util.Duration;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Timer;
 
@@ -102,6 +95,7 @@ public class MainComponent {
                     }
                 } else if (clickCount == 3) {
                     clearText();  // Triple click
+                    playVoice("Keyboard cleared");
                 }
                 clickCount = 0; // Reset after handling the action
             }));
@@ -177,7 +171,7 @@ public class MainComponent {
         // populate grid
         for(int i = 0; i < categoryGroupGridRows; i++) {
             for(int j = 0; j < categoryGroupGridColumns; j++) {
-                int idx = i * categoryGroupGridRows + j;   // get index of node
+                int idx = i * categoryGridColumns + j;   // get index of node
                 Node node = getChildNode(categoryGroupGridPane, i, j);
                 if(idx < categoryGroups.size()) {
                     CategoryGroup categoryGroup = categoryGroups.get(idx);
@@ -385,8 +379,6 @@ public class MainComponent {
             this.loadCards();
         }
         this.updateHighlight();
-//        this.aacController.setDisplayText("");
-
     }
 
     private void updateHighlight() {
@@ -509,24 +501,5 @@ public class MainComponent {
             }
         }
     }
-
-//    private List<CategoryGroup> loadCategories() throws Exception {
-//        String categoryJson = getJsonOfCategories(); // stores JSON content in String
-//        ObjectMapper objectMapper = new ObjectMapper();
-//        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false); // ignores extraneous JSON fields
-//        return objectMapper.readValue(categoryJson, new TypeReference<List<CategoryGroup>>(){}); // converts string into list of CategoryGroup objects
-//    }
-//
-//    private String getJsonOfCategories() throws IOException {
-//        InputStream inStream = this.getClass().getResourceAsStream("/category_card.json"); // load JSON
-//        BufferedReader br = new BufferedReader(new InputStreamReader(inStream));
-//        StringBuilder stringBuilder = new StringBuilder();
-//        String sCurrentLine;
-//        while ((sCurrentLine = br.readLine()) != null) // reads file
-//        {
-//            stringBuilder.append(sCurrentLine).append("\n"); // new line
-//        }
-//        return stringBuilder.toString(); // returns JSON's content as string
-//    }
 
 }

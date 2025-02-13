@@ -38,9 +38,17 @@ public class SettingsEditor {
         // Create UI elements
         updateUI();
 
+        scrollPane.setContent(mainContainer);
+        scrollPane.setFitToWidth(true);
+
+        Scene scene = new Scene(scrollPane, 800, 600);
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+    private HBox getButtonContainer(){
         // Bottom buttons
         HBox buttonContainer = new HBox(10);
-        mainContainer.getChildren().add(buttonContainer);
+
         // Save button
         Button saveButton = new Button("Save");
         saveButton.setOnAction(e -> saveChanges(e));
@@ -50,12 +58,7 @@ public class SettingsEditor {
         cancelButton.setOnAction(e -> cancel(e));
         buttonContainer.getChildren().add(cancelButton);
 
-        scrollPane.setContent(mainContainer);
-        scrollPane.setFitToWidth(true);
-
-        Scene scene = new Scene(scrollPane, 800, 600);
-        primaryStage.setScene(scene);
-        primaryStage.show();
+        return buttonContainer;
     }
 
     private void loadData() {
@@ -76,16 +79,17 @@ public class SettingsEditor {
             VBox groupBox = createGroupBox(group, groupIndex);
             mainContainer.getChildren().add(groupBox);
         }
+        HBox buttonContainer = getButtonContainer();
+        mainContainer.getChildren().add(buttonContainer);
     }
 
     private VBox createGroupBox(CategoryGroup group, int groupIndex) {
-        VBox groupBox = new VBox(5);
+        VBox groupBox = new VBox(10);
         groupBox.getStyleClass().add("group-box");
         groupBox.setStyle("-fx-border-color: #ddd; -fx-border-radius: 5; -fx-padding: 10;");
 
-
         // Group header
-        HBox groupHeader = new HBox(5);
+        HBox groupHeader = new HBox(10);
 
         // Title
         TextField groupTitle = new TextField(group.getTitle());
@@ -109,7 +113,7 @@ public class SettingsEditor {
         Button addCategoryButton = new Button("Add Category");
         addCategoryButton.setOnAction(e -> {
             Category newCategory = new Category();
-            newCategory.setTitle("New Title");
+            newCategory.setTitle("New Category");
             newCategory.setCards(new ArrayList<>());
             group.getCategories().add(newCategory);
             int categoryIndex = group.getCategories().size() - 1;
@@ -117,12 +121,53 @@ public class SettingsEditor {
             categoriesBox.getChildren().add(categoryBox);
         });
 
+        // CategoryGroup Buttons
+        HBox categoryGroupControlButtons = new HBox(5);
+
+        // Add CategoryGroup Button
+        Button addCategoryGroupButton = new Button("Add Category Group");
+        addCategoryGroupButton(addCategoryGroupButton, groupIndex);
+        categoryGroupControlButtons.getChildren().add(addCategoryGroupButton);
+
+        // Delete CategoryGroup Button
+        Button deleteCategoryGroupButton = new Button("Delete Category Group");
+        deleteCategoryGroupButton.setOnAction(e -> {
+            if (deleteAlert("category group") == true){
+                categoryGroups.remove(groupIndex);
+                updateUI();
+            }
+        });
+        categoryGroupControlButtons.getChildren().add(deleteCategoryGroupButton);
+
         groupHeader.getChildren().addAll(groupTitle, addCategoryButton);
-        groupBox.getChildren().addAll(groupHeader, groupPane);
+        groupBox.getChildren().addAll(groupHeader, groupPane, categoryGroupControlButtons);
 
         return groupBox;
     }
 
+    private boolean deleteAlert (String navigationLevel){
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Delete Confirmation");
+        alert.setContentText("Are you sure you want to delete this " + navigationLevel + " ?");
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.get() == ButtonType.OK) {
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+    private void addCategoryGroupButton(Button addButton, int groupIndex){
+        addButton.setOnAction(e -> {
+            CategoryGroup newCategoryGroup = new CategoryGroup();
+            newCategoryGroup.setTitle("New Category Group");
+            newCategoryGroup.setCategories(new ArrayList<>());
+            int newCategoryGroupIndex = groupIndex + 1;
+            categoryGroups.add(newCategoryGroupIndex, newCategoryGroup);
+            updateUI();
+        });
+    }
     private VBox createCategoryBox(Category category, int groupIndex, int categoryIndex) {
         VBox categoryBox = new VBox(5);
         categoryBox.setStyle("-fx-padding: 0 0 0 20;");
@@ -166,13 +211,14 @@ public class SettingsEditor {
         // Delete category button
         Button deleteCategoryButton = new Button("Delete Category");
         deleteCategoryButton.setOnAction(e -> {
-            categoryGroups.get(groupIndex).getCategories().remove(categoryIndex);
-            updateUI();
+            if (deleteAlert("category") == true){
+                categoryGroups.get(groupIndex).getCategories().remove(categoryIndex);
+                updateUI();
+            }
         });
 
         categoryHeader.getChildren().addAll(categoryTitle, categoryImage, deleteCategoryButton);
         categoryBox.getChildren().addAll(categoryHeader, categoryPane, addCardButton);
-
         return categoryBox;
     }
 

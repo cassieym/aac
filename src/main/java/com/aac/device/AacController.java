@@ -59,27 +59,11 @@ public class AacController {
     }
 
     public void clickMenuButton(MouseEvent e){
-//        System.out.println("Clicked");
-//        try {
-//            root = FXMLLoader.load(AacApplication.class.getResource("settings.fxml"));
-//            stage = (Stage)((Node)e.getSource()).getScene().getWindow();
-//            scene = new Scene(root);
-//            stage.setScene(scene);
-//            stage.show();
-//        } catch (IOException ex) {
-//            throw new RuntimeException(ex);
-//        }
         SettingsEditor settingsEditor = new SettingsEditor();
         Stage stage = (Stage)((Node)e.getSource()).getScene().getWindow();
         settingsEditor.start(stage);
 
     }
-
-//    public void clickSaveButton(MouseEvent f) throws IOException {
-//        System.out.println("Saved");
-//        stage = (Stage)((Node)f.getSource()).getScene().getWindow();
-//        SceneFactory.createMainWindow(stage);
-//    }
 }
 
 
