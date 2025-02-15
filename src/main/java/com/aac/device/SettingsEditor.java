@@ -4,20 +4,26 @@ import com.aac.device.model.Card;
 import com.aac.device.model.Category;
 import com.aac.device.model.CategoryGroup;
 import com.aac.device.utils.SceneFactory;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.core.type.TypeReference;
+import javafx.stage.StageStyle;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 public class SettingsEditor {
     private List<CategoryGroup> categoryGroups = new ArrayList<>();
@@ -29,8 +35,12 @@ public class SettingsEditor {
 
         // Create main scroll container
         ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setFitToWidth(true);
+        scrollPane.setPadding(new Insets(10));
+
         mainContainer = new VBox(10);
         mainContainer.setPadding(new Insets(10));
+        mainContainer.prefWidthProperty().bind(scrollPane.widthProperty().subtract(20)); // Ensures responsiveness //
 
         // Load data
         loadData();
@@ -39,32 +49,41 @@ public class SettingsEditor {
         updateUI();
 
         scrollPane.setContent(mainContainer);
-        scrollPane.setFitToWidth(true);
 
         Scene scene = new Scene(scrollPane, 800, 600);
         primaryStage.setScene(scene);
+        primaryStage.setFullScreen(true);
         primaryStage.show();
     }
     private HBox getButtonContainer(){
         // Bottom buttons
         HBox buttonContainer = new HBox(10);
+        buttonContainer.setPadding(new Insets(10));
+        buttonContainer.setStyle("-fx-background-color: #f4f4f4;");
+        buttonContainer.setAlignment(javafx.geometry.Pos.CENTER);
 
-        // Save button
-        Button saveButton = new Button("Save");
-        saveButton.setOnAction(e -> saveChanges(e));
-        buttonContainer.getChildren().add(saveButton);
         // Cancel button
         Button cancelButton = new Button("Cancel");
         cancelButton.setOnAction(e -> cancel(e));
-        buttonContainer.getChildren().add(cancelButton);
+        // Save button
+        Button saveButton = new Button("Save");
+        saveButton.setOnAction(e -> saveChanges(e));
 
+        // Dynamically resizes
+        HBox.setHgrow(saveButton, Priority.ALWAYS);
+        HBox.setHgrow(cancelButton, Priority.ALWAYS);
+        saveButton.setMaxWidth(Double.MAX_VALUE);
+        cancelButton.setMaxWidth(Double.MAX_VALUE);
+
+        buttonContainer.getChildren().addAll(cancelButton, saveButton);
         return buttonContainer;
     }
 
     private void loadData() {
         try {
             File file = getCategoryFile();
-            categoryGroups = mapper.readValue(file, new TypeReference<List<CategoryGroup>>() {});
+            categoryGroups = mapper.readValue(file, new TypeReference<>() {
+            });
         } catch (Exception e) {
             e.printStackTrace();
             showAlert("Error loading data: " + e.getMessage());
@@ -87,20 +106,21 @@ public class SettingsEditor {
         VBox groupBox = new VBox(10);
         groupBox.getStyleClass().add("group-box");
         groupBox.setStyle("-fx-border-color: #ddd; -fx-border-radius: 5; -fx-padding: 10;");
+        groupBox.prefWidthProperty().bind(mainContainer.widthProperty().subtract(20));
 
         // Group header
         HBox groupHeader = new HBox(10);
+        groupHeader.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
 
         // Title
         TextField groupTitle = new TextField(group.getTitle());
-        groupTitle.setPrefWidth(200);
-        groupTitle.textProperty().addListener((obs, old, newValue) -> {
-            group.setTitle(newValue);
-        });
+        groupTitle.prefWidthProperty().bind(groupBox.widthProperty().multiply(0.5));
+        groupTitle.textProperty().addListener((obs, old, newValue) -> group.setTitle(newValue));
 
         TitledPane groupPane = new TitledPane();
         groupPane.setText("");
         VBox categoriesBox = new VBox(5);
+        categoriesBox.prefWidthProperty().bind(groupBox.widthProperty().subtract(20));
         groupPane.setContent(categoriesBox);
 
         for (int categoryIndex = 0; categoryIndex < group.getCategories().size(); categoryIndex++) {
@@ -132,10 +152,13 @@ public class SettingsEditor {
         // Delete CategoryGroup Button
         Button deleteCategoryGroupButton = new Button("Delete Category Group");
         deleteCategoryGroupButton.setOnAction(e -> {
-            if (deleteAlert("category group") == true){
+            Stage settingsStage = (Stage) ((Node) e.getSource()).getScene().getWindow();
+            if (deleteAlert("category group", settingsStage)){
                 categoryGroups.remove(groupIndex);
                 updateUI();
             }
+
+            settingsStage.setFullScreen(true);
         });
         categoryGroupControlButtons.getChildren().add(deleteCategoryGroupButton);
 
@@ -145,12 +168,17 @@ public class SettingsEditor {
         return groupBox;
     }
 
-    private boolean deleteAlert (String navigationLevel){
+    private boolean deleteAlert (String navigationLevel, Stage settingsStage){
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Delete Confirmation");
         alert.setContentText("Are you sure you want to delete this " + navigationLevel + " ?");
 
+        // Ensure the alert appears on top of the fullscreen settings window
+        alert.initOwner(settingsStage);
+        alert.initModality(Modality.APPLICATION_MODAL); // Prevents interaction with settings until closed
+
         Optional<ButtonType> result = alert.showAndWait();
+
         if (result.get() == ButtonType.OK) {
             return true;
         }
@@ -170,24 +198,21 @@ public class SettingsEditor {
     }
     private VBox createCategoryBox(Category category, int groupIndex, int categoryIndex) {
         VBox categoryBox = new VBox(5);
-        categoryBox.setStyle("-fx-padding: 0 0 0 20;");
+        categoryBox.setStyle("-fx-padding: 5;");
 
         // Category header
-        HBox categoryHeader = new HBox(7);
+        HBox categoryHeader = new HBox(10);
         TextField categoryTitle = new TextField(category.getTitle());
         TextField categoryImage = new TextField(category.getImageFile());
-        categoryTitle.setPrefWidth(200);
-        categoryImage.setPrefWidth(200);
 
-        categoryTitle.textProperty().addListener((obs, old, newValue) -> {
-            category.setTitle(newValue);
-        });
-        categoryImage.textProperty().addListener((obs, old, newValue) -> {
-            category.setImageFile(newValue);
-        });
+        // Dynamic scaling
+        categoryTitle.prefWidthProperty().bind(categoryBox.widthProperty().multiply(0.4));
+        categoryImage.prefWidthProperty().bind(categoryBox.widthProperty().multiply(0.4));
+
+        categoryTitle.textProperty().addListener((obs, old, newValue) -> category.setTitle(newValue));
+        categoryImage.textProperty().addListener((obs, old, newValue) -> category.setImageFile(newValue));
 
         TitledPane categoryPane = new TitledPane();
-        categoryPane.setText("");
         VBox cardsBox = new VBox(5);
         categoryPane.setContent(cardsBox);
 
@@ -211,7 +236,8 @@ public class SettingsEditor {
         // Delete category button
         Button deleteCategoryButton = new Button("Delete Category");
         deleteCategoryButton.setOnAction(e -> {
-            if (deleteAlert("category") == true){
+            Stage settingsStage = (Stage) ((Node) e.getSource()).getScene().getWindow();
+            if (deleteAlert("category", settingsStage)){
                 categoryGroups.get(groupIndex).getCategories().remove(categoryIndex);
                 updateUI();
             }
@@ -224,25 +250,20 @@ public class SettingsEditor {
 
     private HBox createCardBox(Card card, int groupIndex, int categoryIndex, int cardIndex) {
         HBox cardBox = new HBox(5);
-        cardBox.setStyle("-fx-padding: 0 0 0 20;");
+        cardBox.setStyle("-fx-padding: 5;");//
 
         TextField cardTitle = new TextField(card.getTitle());
         TextField cardText = new TextField(card.getText());
         TextField cardImage = new TextField(card.getImageFile());
 
-        cardTitle.setPrefWidth(150);
-        cardText.setPrefWidth(150);
-        cardImage.setPrefWidth(150);
+        // Dynamic scaling
+        HBox.setHgrow(cardTitle, Priority.ALWAYS);
+        HBox.setHgrow(cardText, Priority.ALWAYS);
+        HBox.setHgrow(cardImage, Priority.ALWAYS);
 
-        cardTitle.textProperty().addListener((obs, old, newValue) -> {
-            card.setTitle(newValue);
-        });
-        cardText.textProperty().addListener((obs, old, newValue) -> {
-            card.setText(newValue);
-        });
-        cardImage.textProperty().addListener((obs, old, newValue) -> {
-            card.setImageFile(newValue);
-        });
+        cardTitle.textProperty().addListener((obs, old, newValue) -> card.setTitle(newValue));
+        cardText.textProperty().addListener((obs, old, newValue) -> card.setText(newValue));
+        cardImage.textProperty().addListener((obs, old, newValue) -> card.setImageFile(newValue));
 
         Button deleteButton = new Button("Delete");
         deleteButton.setOnAction(e -> {
@@ -255,6 +276,8 @@ public class SettingsEditor {
     }
 
     private void saveChanges(ActionEvent event) {
+        Stage settingsStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+
         try {
             String jsonString = mapper.writeValueAsString(categoryGroups);
             File file = getCategoryFile();
@@ -262,7 +285,7 @@ public class SettingsEditor {
                 writer.write(jsonString);
                 writer.flush();
             }
-            showAlert("Changes saved successfully!");
+            showAlert("Changes saved successfully!", settingsStage);
         } catch (Exception e) {
             showAlert("Error saving changes: " + e.getMessage());
         }
@@ -276,9 +299,18 @@ public class SettingsEditor {
         SceneFactory.createMainWindow(stage);
     }
 
-    private void showAlert(String message) {
+    private void showAlert(String message, Stage stage) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.initOwner(stage);
         alert.setTitle("Information");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    private void showAlert(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("ERROR");
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();

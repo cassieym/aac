@@ -5,8 +5,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
 import javafx.stage.Stage;
@@ -23,12 +22,63 @@ public class AacController {
 
     @FXML
     private Button settingButton;
-
-
+    @FXML
+    private VBox VBoxContainer;
     private MainComponent mainComponent;
+    private double lastWidth;
+    private double lastHeight;
+    private boolean isFullScreen;
 
     public void setMainComponent(MainComponent mainComponent) {
         this.mainComponent = mainComponent;
+    }
+
+    public void resizeComponents(double width, double height) {
+        // Resize VBox container
+        VBoxContainer.setPrefWidth(width);
+        VBoxContainer.setPrefHeight(height);
+
+        // Resize display text area (top section)
+        displayText.setPrefWidth(width * 0.7);
+        displayText.setPrefHeight(height * 0.1);
+        settingButton.setPrefWidth(width * 0.15);
+
+        // Resize grid panes
+        leftGridPane.setPrefWidth(width * 0.6);
+        leftGridPane.setPrefHeight(height * 0.7);
+
+        rightPane.setPrefWidth(width * 0.35);
+        rightPane.setPrefHeight(height * 0.7);
+
+        // Resize all child GridPanes in leftGridPane
+        for (Node node : leftGridPane.getChildren()) {
+            if (node instanceof GridPane) {
+                GridPane categoryGrid = (GridPane) node;
+                categoryGrid.setPrefWidth(width * 0.18);
+                categoryGrid.setPrefHeight(height * 0.32);
+
+                // Resize cells within category grid
+                for (Node cell : categoryGrid.getChildren()) {
+                    if (cell instanceof Region) {
+                        ((Region) cell).setPrefWidth(width * 0.05);
+                        ((Region) cell).setPrefHeight(height * 0.09);
+                    }
+                }
+            }
+        }
+
+        // Resize the cards grid in rightPane
+        GridPane cardsGrid = (GridPane) ((StackPane) rightPane).getChildren().get(0);
+        cardsGrid.setPrefWidth(width * 0.32);
+        cardsGrid.setPrefHeight(height * 0.65);
+
+        // Resize cells within cards grid
+        for (Node cell : cardsGrid.getChildren()) {
+            if (cell instanceof Region) {
+                ((Region) cell).setPrefWidth(width * 0.07);
+                ((Region) cell).setPrefHeight(height * 0.1);
+            }
+        }
     }
 
     public void setDisplayText(String text) {

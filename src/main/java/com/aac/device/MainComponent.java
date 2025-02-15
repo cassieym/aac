@@ -54,9 +54,6 @@ public class MainComponent {
     private Timer timer;
     private Timeline clickTimeline;
 
-    public MainComponent() {
-    }
-
     public void setController(AacController aacController) {
         this.aacController = aacController;
         this.aacController.setMainComponent(this);
@@ -102,49 +99,10 @@ public class MainComponent {
             clickTimeline.setCycleCount(1);
             clickTimeline.play(); // executes action after waiting 800ms
         }
-//        cancelTimer();
-//        if(event.getCode() == KeyCode.RIGHT || event.getCode() == KeyCode.LEFT) {
-//            // check for a double click event (same key pressed twice within a specific time frame)
-//            if(this.previousKeyCode == event.getCode() && (System.currentTimeMillis() - this.previousReleaseKeyTime) < DOUBLE_CLICK_MAX_INTERVAL) {
-//                //reset previous key event
-//                this.previousKeyCode = KeyCode.ESCAPE;
-//                if (event.getCode() == KeyCode.RIGHT)  // right key double click
-//                    selectCurrentCell();
-//                else
-//                    moveUp();   // left key double click
-//
-//            }
-//            else {
-//                this.previousKeyCode = event.getCode();
-//                timer = new Timer();
-//                timer.scheduleAtFixedRate(new TimerTask() {
-//                    @Override
-//                    public void run() {
-//                        Platform.runLater(() -> {
-//                            if(event.getCode() == KeyCode.RIGHT ) {  // right key single click
-//                                moveRight();
-//                            }
-//                            else {
-//                                moveLeft();   // left key single click
-//                            }
-//                        });
-//                    }
-//                }, DOUBLE_CLICK_MAX_INTERVAL, 300000);
-//            }
-//        }
-//        else {
-//            this.previousKeyCode = event.getCode();
-//        }
-//
-//        this.previousReleaseKeyTime = System.currentTimeMillis();
     }
 
     private void clearText() {
         this.aacController.setDisplayText();
-    }
-
-    public List<CategoryGroup> getCategoryGroups(){
-        return this.categoryGroups;
     }
 
     public void load() throws Exception {
