@@ -53,12 +53,14 @@ public class GridCell {
         }
         return image;
     }
-
+    
+    // Check if image file is a resource file
     private boolean isResourceFile() {
         URL url = this.getClass().getResource(imageFile);
         return url != null;
     }
 
+    // Default image for cells with invalid URL/image file
     private Image getDefaultImage() {
         if(defaultImage != null) {
             return defaultImage;

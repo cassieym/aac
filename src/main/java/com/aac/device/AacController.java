@@ -78,6 +78,7 @@ public class AacController {
         }
     }
 
+    // SET DISPLAY TEXT
     public void setDisplayText(String newText) {
         if(newText == null) {
             newText = "";
@@ -95,11 +96,11 @@ public class AacController {
         this.displayText.setFont(Font.font("Verdana", FontPosture.REGULAR, 25));
         this.displayText.setWrapText(true); // allows for 2 lines of text
     }
-
     public void setDisplayText() { // clear text
         this.displayText.setText("");
     }
 
+    // Switch to Settings editor stage
     public void clickMenuButton(MouseEvent e){
         Stage stage = (Stage)((Node)e.getSource()).getScene().getWindow();
         new SettingsEditor().start(stage);

@@ -6,7 +6,6 @@ import javafx.stage.Stage;
 
 public class AacApplication extends Application {
 
-
     @Override
     public void start(Stage stage) {
         SceneFactory.createMainWindow(stage);
@@ -14,7 +13,7 @@ public class AacApplication extends Application {
 
     @Override
     public void stop() throws Exception {
-        super.stop();
+        super.stop(); // stop application
     }
 
     public static void main(String[] args) {

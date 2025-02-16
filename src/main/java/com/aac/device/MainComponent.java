@@ -26,6 +26,7 @@ import java.util.Timer;
 public class MainComponent {
     private AacController aacController;
 
+    // Grid layout dimensions
     private int categoryGroupGridRows;
     private int categoryGroupGridColumns;
     private int categoryGridRows;
@@ -33,35 +34,134 @@ public class MainComponent {
     private int cardGridRows;
     private int cardGridColumns;
 
-    private static final String CELL_STYLE = "-fx-background-color: white; -fx-border-color: grey; -fx-border-width: 2; -fx-alignment: center;";
-    private static final long MULTI_CLICK_MAX_INTERVAL = 800; // double click timer in ms
+    private static final String CELL_STYLE = "-fx-background-color: white; -fx-border-color: grey; -fx-border-width: 2; -fx-alignment: center;"; 
 
-    private Node activeNode = null;
+    private Node activeNode = null; 
+    private String activeNodeOriginalStyle = null; 
 
-    private String activeNodeOriginalStyle = null;
-
-    private int currentCategoryGroupIndex = 0;
+    // Current index
+    private int currentCategoryGroupIndex = 0; 
     private int currentCategoryIndex = 0;
     private int currentCardIndex = 0;
 
     private NavigationLevel navigationLevel = NavigationLevel.CATEGORY_GROUP;
-
     private List<CategoryGroup> categoryGroups;
+
+    // Voice
     private final boolean enableVoice = true;
+
+    // Click count tracking
+    private static final long MULTI_CLICK_MAX_INTERVAL = 800; // double click timer in ms
     private int clickCount = 0;
     private long lastClickTime = 0;
-
     private Timer timer;
     private Timeline clickTimeline;
 
+    // Constructor
     public MainComponent() {
     }
 
+    // Set controller
     public void setController(AacController aacController) {
         this.aacController = aacController;
         this.aacController.setMainComponent(this);
     }
 
+
+    // LOAD NAVIGATION LEVELS
+    // Load category groups (main panel)
+    public void load() throws Exception {
+        aacController.setDisplayText("");
+        //setup voices https://stackoverflow.com/questions/12684627/freetts-unable-to-find-any-voice
+        System.setProperty("freetts.voices", "com.sun.speech.freetts.en.us.cmu_us_kal.KevinVoiceDirectory");
+
+        GridPane categoryGroupGridPane = this.aacController.getLeftGridPane();
+        this.categoryGroupGridRows = categoryGroupGridPane.getRowCount();
+        this.categoryGroupGridColumns = categoryGroupGridPane.getColumnCount();
+
+        GridPane categoryGridPane =(GridPane) categoryGroupGridPane.getChildren().get(0);
+        this.categoryGridRows = categoryGridPane.getRowCount();
+        this.categoryGridColumns = categoryGridPane.getColumnCount();
+
+
+        Pane rightPane = this.aacController.getRightPane();
+        GridPane cardGridPane =(GridPane) rightPane.getChildren().get(0);
+        this.cardGridRows = cardGridPane.getRowCount();
+        this.cardGridColumns = cardGridPane.getColumnCount();
+
+        categoryGroups = CategoryCardLoader.loadCategories();
+
+        // populate grid
+        for(int i = 0; i < categoryGroupGridRows; i++) {
+            for(int j = 0; j < categoryGroupGridColumns; j++) {
+                int idx = i * categoryGridColumns + j;   // get index of node
+                Node node = getChildNode(categoryGroupGridPane, i, j);
+                if(idx < categoryGroups.size()) {
+                    CategoryGroup categoryGroup = categoryGroups.get(idx);
+                    categoryGroup.setRowIndex(i);
+                    categoryGroup.setColumnIndex(j);
+                    loadCategory((GridPane)node, categoryGroup);
+                    node.setVisible(true);
+                }
+                else {
+                    node.setVisible(false);
+                }
+            }
+        }
+        refresh(true);
+    }
+
+    // Load category
+    private void loadCategory(GridPane categoryGroupPane, CategoryGroup categoryGroup) {
+        List<Category> categories = categoryGroup.getCategories();
+        double cellWidth =(categoryGroupPane.getWidth() - categoryGroupPane.getPadding().getLeft() - categoryGroupPane.getPadding().getRight())/this.categoryGridColumns;
+        double cellHeight =(categoryGroupPane.getHeight() - categoryGroupPane.getPadding().getTop() - categoryGroupPane.getPadding().getBottom())/this.categoryGridColumns;
+
+        for(int i = 0; i < categoryGridRows; i++) {
+            for(int j = 0; j < categoryGridColumns; j++) {
+                int idx = i * categoryGridColumns + j;
+                if(idx < categories.size()) {
+                    Category category = categories.get(idx);
+                    category.setRowIndex(i);
+                    category.setColumnIndex(j);
+                    setGridCell(categoryGroupPane, cellWidth, cellHeight, category, category.getTitle());
+                }
+                else {
+                    break;
+                }
+            }
+        }
+    }
+
+    // Load cards
+    private void loadCards() {
+        CategoryGroup categoryGroup = this.categoryGroups.get(currentCategoryGroupIndex);
+        Category category = categoryGroup.getCategories().get(currentCategoryIndex);
+        List<Card> cards = category.getCards();
+        Pane rightPane = aacController.getRightPane();
+        double cellWidth =(rightPane.getWidth() - rightPane.getPadding().getLeft() - rightPane.getPadding().getRight())/this.cardGridRows;
+        double cellHeight =(rightPane.getHeight() - rightPane.getPadding().getTop() - rightPane.getPadding().getBottom())/this.cardGridColumns;
+        GridPane cellGridPane =(GridPane)rightPane.getChildren().get(0);
+        // Clear previous settings
+        cellGridPane.getChildren().clear();
+        for(int i = 0; i < cardGridRows; i++) {
+            for(int j = 0; j < cardGridColumns; j++) {
+                int idx = i * cardGridColumns + j;
+                if(idx < cards.size()) {
+                    Card card = cards.get(idx);
+                    card.setRowIndex(i);
+                    card.setColumnIndex(j);
+                    setGridCell(cellGridPane, cellWidth, cellHeight, card, card.getText());
+                }
+                else {
+                    break;
+                }
+            }
+        }
+    }
+    
+
+    // HANDLE KEY EVENTS
     public void onKeyReleased(KeyEvent event) {
         long currentTime = System.currentTimeMillis();
 
@@ -104,55 +204,12 @@ public class MainComponent {
         }
     }
 
+    // Clear textbox text
     private void clearText() {
         this.aacController.setDisplayText();
     }
 
-    public void load() throws Exception {
-        aacController.setDisplayText("");
-        //setup voices https://stackoverflow.com/questions/12684627/freetts-unable-to-find-any-voice
-        System.setProperty("freetts.voices", "com.sun.speech.freetts.en.us.cmu_us_kal.KevinVoiceDirectory");
-
-        GridPane categoryGroupGridPane = this.aacController.getLeftGridPane();
-        this.categoryGroupGridRows = categoryGroupGridPane.getRowCount();
-        this.categoryGroupGridColumns = categoryGroupGridPane.getColumnCount();
-
-        GridPane categoryGridPane =(GridPane) categoryGroupGridPane.getChildren().get(0);
-        this.categoryGridRows = categoryGridPane.getRowCount();
-        this.categoryGridColumns = categoryGridPane.getColumnCount();
-
-
-        Pane rightPane = this.aacController.getRightPane();
-        GridPane cardGridPane =(GridPane) rightPane.getChildren().get(0);
-        this.cardGridRows = cardGridPane.getRowCount();
-        this.cardGridColumns = cardGridPane.getColumnCount();
-
-        categoryGroups = CategoryCardLoader.loadCategories();
-
-        // populate grid
-        for(int i = 0; i < categoryGroupGridRows; i++) {
-            for(int j = 0; j < categoryGroupGridColumns; j++) {
-                int idx = i * categoryGridColumns + j;   // get index of node
-                Node node = getChildNode(categoryGroupGridPane, i, j);
-                if(idx < categoryGroups.size()) {
-                    CategoryGroup categoryGroup = categoryGroups.get(idx);
-                    categoryGroup.setRowIndex(i);
-                    categoryGroup.setColumnIndex(j);
-                    loadCategory((GridPane)node, categoryGroup);
-                    node.setVisible(true);
-                }
-                else {
-                    node.setVisible(false);
-                }
-            }
-        }
-        refresh(true);
-    }
-
-    public void close() {
-        // alert box
-    }
-
+    // Move right
     private void moveRight() {
         cancelTimer();
         if(this.navigationLevel == NavigationLevel.CATEGORY_GROUP) {  // navigationLevel == NavigationLevel.CATEGORY_GROUP
@@ -201,6 +258,7 @@ public class MainComponent {
         }
     }
 
+    // Move left
     private void moveLeft() {
         cancelTimer();
         if(this.navigationLevel == NavigationLevel.CATEGORY_GROUP) {
@@ -246,6 +304,7 @@ public class MainComponent {
         }
     }
 
+    // Select current cell
     private void selectCurrentCell() {
         if(this.navigationLevel == NavigationLevel.CATEGORY_GROUP) {
             this.navigationLevel = NavigationLevel.CATEGORY;
@@ -270,6 +329,7 @@ public class MainComponent {
         }
     }
 
+    // Move up hierarchy
     private void moveUp() {
         if(this.navigationLevel == NavigationLevel.CARD) {
             this.navigationLevel = NavigationLevel.CATEGORY;
@@ -284,13 +344,13 @@ public class MainComponent {
         }
     }
 
+    // Display card text and play voice
     private void playCard(String text) {
         if(text == null || text.isBlank())
             return;
         this.aacController.setDisplayText(text);
         this.playVoice(text);
     }
-
     private void playVoice(String text) {
         if(enableVoice) {
             try {
@@ -302,7 +362,7 @@ public class MainComponent {
                     voice.deallocate();
                 }
             } catch (Exception ex) {
-                //Ignore
+                //ignore
             }
         }
     }
@@ -314,27 +374,9 @@ public class MainComponent {
         }
     }
 
-    private void loadCategory(GridPane categoryGroupPane, CategoryGroup categoryGroup) {
-        List<Category> categories = categoryGroup.getCategories();
-        double cellWidth =(categoryGroupPane.getWidth() - categoryGroupPane.getPadding().getLeft() - categoryGroupPane.getPadding().getRight())/this.categoryGridColumns;
-        double cellHeight =(categoryGroupPane.getHeight() - categoryGroupPane.getPadding().getTop() - categoryGroupPane.getPadding().getBottom())/this.categoryGridColumns;
+    
 
-        for(int i = 0; i < categoryGridRows; i++) {
-            for(int j = 0; j < categoryGridColumns; j++) {
-                int idx = i * categoryGridColumns + j;
-                if(idx < categories.size()) {
-                    Category category = categories.get(idx);
-                    category.setRowIndex(i);
-                    category.setColumnIndex(j);
-                    setGridCell(categoryGroupPane, cellWidth, cellHeight, category, category.getTitle());
-                }
-                else {
-                    break;
-                }
-            }
-        }
-    }
-
+    // REFRESH UI
     private void refresh(boolean reloadCards) {
         if(reloadCards) {
             this.loadCards();
@@ -375,6 +417,7 @@ public class MainComponent {
         }
         this.playVoice(title);
     }
+
     private void updateBorderColor(Node node) {
         // Restore the previous active node
         if(this.activeNode != null && this.activeNodeOriginalStyle  != null) {
@@ -405,31 +448,6 @@ public class MainComponent {
     }
 
 
-    private void loadCards() {
-        CategoryGroup categoryGroup = this.categoryGroups.get(currentCategoryGroupIndex);
-        Category category = categoryGroup.getCategories().get(currentCategoryIndex);
-        List<Card> cards = category.getCards();
-        Pane rightPane = aacController.getRightPane();
-        double cellWidth =(rightPane.getWidth() - rightPane.getPadding().getLeft() - rightPane.getPadding().getRight())/this.cardGridRows;
-        double cellHeight =(rightPane.getHeight() - rightPane.getPadding().getTop() - rightPane.getPadding().getBottom())/this.cardGridColumns;
-        GridPane cellGridPane =(GridPane)rightPane.getChildren().get(0);
-        // Clear previous settings
-        cellGridPane.getChildren().clear();
-        for(int i = 0; i < cardGridRows; i++) {
-            for(int j = 0; j < cardGridColumns; j++) {
-                int idx = i * cardGridColumns + j;
-                if(idx < cards.size()) {
-                    Card card = cards.get(idx);
-                    card.setRowIndex(i);
-                    card.setColumnIndex(j);
-                    setGridCell(cellGridPane, cellWidth, cellHeight, card, card.getText());
-                }
-                else {
-                    break;
-                }
-            }
-        }
-    }
 
     private Node getChildNode(GridPane gridPane, int rowIndex, int columnIndex) {
         for(Node node : gridPane.getChildren()) {
@@ -439,7 +457,7 @@ public class MainComponent {
         }
         return null;
     }
-
+    
     private void setGridCell(GridPane gridPane, double cellWidth, double cellHeight, GridCell gridCell, String tooltip) {
         Image image = gridCell.getCellImage();
         if(image != null) {

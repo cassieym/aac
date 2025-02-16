@@ -12,6 +12,7 @@ import java.util.List;
 
 public class CategoryCardLoader {
     private static final String CATEGORY_FILE = "category_card.json";
+    
     public static List<CategoryGroup> loadCategories() throws Exception {
         String categoryJson = getJsonOfCategories(); // stores JSON content in String
         ObjectMapper objectMapper = new ObjectMapper();
