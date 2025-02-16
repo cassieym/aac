@@ -7,10 +7,11 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.io.FileInputStream;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Data
 public class GridCell {
@@ -28,37 +29,85 @@ public class GridCell {
     @Setter(AccessLevel.NONE)
     @JsonIgnore
     private static Image defaultImage;
+    private static final String IMAGE_DIRECTORY = "/local_images";
 
     @JsonIgnore
-    public Image getCellImage() {
+    public Image getCellImage(String cellTitle) {
         if(image == null) {
             if(imageFile == null || imageFile.trim() == "") {
                 return null;
             }
             try {
-                if(isResourceFile()) {
-                    FileInputStream imageInputStream = new FileInputStream(this.getClass().getResource(imageFile).getPath());
-                    image = new Image(imageInputStream);
+                InputStream inputStream = this.getClass().getResourceAsStream(imageFile);
+                if(inputStream != null) {  // image file
+                    image = new Image(inputStream);
                 }
                 else {
-                    URL url = new URL(this.imageFile);
-                    URLConnection conn = url.openConnection();
-                    InputStream in = conn.getInputStream();
-                    image = new Image(in);
+                    File file = new File(imageFile);
+                    if(file.exists()) {
+                        // this is image in local file system
+                        inputStream = new FileInputStream(file);
+                        image = new Image(inputStream);
+                    }
+                    else {
+                        // maybe this is online image
+                        // first check whether there is a local copy of the online image
+                        String imageDirPath = getLocalImageFileDirectory();
+                        String cleanedCellTitle = cellTitle.replaceAll(" ", "_").toLowerCase();
+                        String localImageFile = imageDirPath + File.separator + cleanedCellTitle + ".png";
+                        file = new File(localImageFile);
+                        if(file.exists()) {
+                            inputStream = new FileInputStream(file);
+                            image = new Image(inputStream);
+                        }
+                        else {
+                            // Download the image from online/internet
+                            URL url = new URL(this.imageFile);
+                            URLConnection conn = url.openConnection();
+                            InputStream in = conn.getInputStream();
+                            image = new Image(in);
+
+                            // Save the image from online to local file
+                            saveImage(imageFile, localImageFile);
+                        }
+                    }
                 }
-            }
-            catch(Exception ex) {
+            } catch (Exception ex) {
+                ex.printStackTrace();
                 image = getDefaultImage();
             }
         }
         return image;
     }
-    
-    // Check if image file is a resource file
-    private boolean isResourceFile() {
-        URL url = this.getClass().getResource(imageFile);
-        return url != null;
+
+    private void saveImage(String imageUrl, String destinationFile) throws IOException {
+        try (InputStream is = new URL(imageUrl).openStream();
+             OutputStream os = new FileOutputStream(destinationFile)) {
+
+            byte[] b = new byte[8192];
+            int length;
+
+            while ((length = is.read(b)) != -1) {
+                os.write(b, 0, length);
+            }
+        }
     }
+
+    private String getLocalImageFileDirectory() {
+        // Get the project root directory
+        String projectRoot = System.getProperty("user.dir");
+
+        // Create full path for the images directory
+        String imageDirPath = projectRoot + IMAGE_DIRECTORY;
+
+        // Create directory if it doesn't exist
+        File directory = new File(imageDirPath);
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+        return imageDirPath;
+    }
+
 
     // Default image for cells with invalid URL/image file
     private Image getDefaultImage() {
@@ -67,8 +116,10 @@ public class GridCell {
         }
 
         try {
-            FileInputStream imageInputStream = new FileInputStream(this.getClass().getResource("/images/default.png").getPath());
-            defaultImage = new Image(imageInputStream);
+            InputStream inputStream = this.getClass().getResourceAsStream("/images/default.png");
+            if(inputStream != null) {
+                defaultImage = new Image(inputStream);
+            }
         }
         catch(Exception e) {
         }

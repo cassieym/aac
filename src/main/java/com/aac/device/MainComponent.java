@@ -459,7 +459,7 @@ public class MainComponent {
     }
     
     private void setGridCell(GridPane gridPane, double cellWidth, double cellHeight, GridCell gridCell, String tooltip) {
-        Image image = gridCell.getCellImage();
+        Image image = gridCell.getCellImage(tooltip);
         if(image != null) {
             double imageWidth = image.getWidth();
             double imageHeight = image.getHeight();

@@ -22,12 +22,8 @@ public class CategoryCardLoader {
 
     public static void saveCategories(List<CategoryGroup> categoryGroups) throws IOException, URISyntaxException {
         ObjectMapper objectMapper = new ObjectMapper();
-        String jsonString = objectMapper.writeValueAsString(categoryGroups);
         File file = getCategoryFile();
-        try(FileWriter writer = new FileWriter(file)) {
-            writer.write(jsonString);
-            writer.flush();
-        }
+        objectMapper.writeValue(file, categoryGroups);
     }
 
     private static String getJsonOfCategories() throws IOException, URISyntaxException {
@@ -48,8 +44,8 @@ public class CategoryCardLoader {
     }
 
     private static File getCategoryFile() throws URISyntaxException {
-        String directory = CategoryCardLoader.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
-        String filePath = directory + CATEGORY_FILE;
+        String directory = System.getProperty("user.dir");;
+        String filePath = directory + "/" + CATEGORY_FILE;
         return new File(filePath);
     }
 }

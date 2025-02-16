@@ -3,6 +3,7 @@ package com.aac.device;
 import com.aac.device.model.Card;
 import com.aac.device.model.Category;
 import com.aac.device.model.CategoryGroup;
+import com.aac.device.utils.CategoryCardLoader;
 import com.aac.device.utils.SceneFactory;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -56,9 +57,7 @@ public class SettingsEditor {
 
     private void loadData() {
         try {
-            File file = getCategoryFile();
-            categoryGroups = mapper.readValue(file, new TypeReference<>() {
-            });
+            categoryGroups = CategoryCardLoader.loadCategories();
         } catch (Exception e) {
             e.printStackTrace();
             showAlert("Error loading data: " + e.getMessage(), null, Alert.AlertType.ERROR);
@@ -303,8 +302,7 @@ public class SettingsEditor {
         Stage settingsStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
 
         try {
-            File file = getCategoryFile();
-            mapper.writeValue(file, categoryGroups);
+            CategoryCardLoader.saveCategories(categoryGroups);
             showAlert("Changes saved successfully!", settingsStage, Alert.AlertType.INFORMATION);
             SceneFactory.createMainWindow(settingsStage);
         } catch (Exception e) {
@@ -337,14 +335,6 @@ public class SettingsEditor {
         Optional<ButtonType> result = alert.showAndWait();
 
         return result.get() == ButtonType.OK;
-    }
-
-
-
-    private File getCategoryFile() throws URISyntaxException {
-        String directory = SettingsEditor.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
-        String filePath = directory + "category_card.json";
-        return new File(filePath);
     }
 
 }
