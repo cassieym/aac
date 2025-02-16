@@ -47,12 +47,15 @@ public class MainComponent {
     private NavigationLevel navigationLevel = NavigationLevel.CATEGORY_GROUP;
 
     private List<CategoryGroup> categoryGroups;
-    private boolean enableVoice = true;
+    private final boolean enableVoice = true;
     private int clickCount = 0;
     private long lastClickTime = 0;
 
     private Timer timer;
     private Timeline clickTimeline;
+
+    public MainComponent() {
+    }
 
     public void setController(AacController aacController) {
         this.aacController = aacController;
@@ -343,38 +346,35 @@ public class MainComponent {
         Node node;
         String title;
         CategoryGroup categoryGroup = this.categoryGroups.get(currentCategoryGroupIndex);
-        if(this.navigationLevel == NavigationLevel.CARD) {
+        if (this.navigationLevel == NavigationLevel.CARD) {
             Pane rightPane = aacController.getRightPane();
-            GridPane cellGridPane =(GridPane)rightPane.getChildren().get(0);
+            GridPane cellGridPane = (GridPane) rightPane.getChildren().get(0);
 
             Category category = categoryGroup.getCategories().get(currentCategoryIndex);
             List<Card> cards = category.getCards();
             Card card = cards.get(this.currentCardIndex);
             node = getChildNode(cellGridPane, card.getRowIndex(), card.getColumnIndex());
             title = card.getTitle();
-        }
-        else {
+        } else {
 
             GridPane categoryGroupGridPane = this.aacController.getLeftGridPane();
-            if(this.navigationLevel == NavigationLevel.CATEGORY_GROUP) {
+            if (this.navigationLevel == NavigationLevel.CATEGORY_GROUP) {
                 node = getChildNode(categoryGroupGridPane, categoryGroup.getRowIndex(), categoryGroup.getColumnIndex());
                 title = categoryGroup.getTitle();
-            }
-            else {
+            } else {
                 List<Category> categories = categoryGroup.getCategories();
                 Category category = categories.get(this.currentCategoryIndex);
-                GridPane categoryGridPane =(GridPane)getChildNode(categoryGroupGridPane, categoryGroup.getRowIndex(), categoryGroup.getColumnIndex());
+                GridPane categoryGridPane = (GridPane) getChildNode(categoryGroupGridPane, categoryGroup.getRowIndex(), categoryGroup.getColumnIndex());
                 node = getChildNode(categoryGridPane, category.getRowIndex(), category.getColumnIndex());
                 title = category.getTitle();
             }
         }
-        if(node != null) {
+        if (node != null) {
             this.updateBorderColor(node);
             node.requestFocus();
         }
         this.playVoice(title);
     }
-
     private void updateBorderColor(Node node) {
         // Restore the previous active node
         if(this.activeNode != null && this.activeNodeOriginalStyle  != null) {
@@ -403,6 +403,7 @@ public class MainComponent {
         }
         node.setStyle(highlightStyle);
     }
+
 
     private void loadCards() {
         CategoryGroup categoryGroup = this.categoryGroups.get(currentCategoryGroupIndex);

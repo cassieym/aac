@@ -4,11 +4,9 @@ import com.aac.device.AacApplication;
 import com.aac.device.AacController;
 import com.aac.device.MainComponent;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.stage.Stage;
-import javafx.stage.Screen;
 
 import java.io.IOException;
 
@@ -63,7 +61,7 @@ public class SceneFactory {
         try {
             stage.close();
         }
-        catch(Exception e) {
+        catch(Exception ignored) {
         }
     }
 }

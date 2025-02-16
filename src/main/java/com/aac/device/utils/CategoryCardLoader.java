@@ -11,7 +11,7 @@ import java.util.List;
 
 
 public class CategoryCardLoader {
-    private static String CATEGORY_FILE = "category_card.json";
+    private static final String CATEGORY_FILE = "category_card.json";
     public static List<CategoryGroup> loadCategories() throws Exception {
         String categoryJson = getJsonOfCategories(); // stores JSON content in String
         ObjectMapper objectMapper = new ObjectMapper();
@@ -32,7 +32,7 @@ public class CategoryCardLoader {
     private static String getJsonOfCategories() throws IOException, URISyntaxException {
         File file = getCategoryFile();
         if(!file.exists()) {
-            System.out.println(String.format("File %s does not exists", file.getPath()));
+            System.out.printf("File %s does not exists%n", file.getPath());
             return "{}";
         }
         InputStream inStream = new FileInputStream(file);

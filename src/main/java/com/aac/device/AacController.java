@@ -9,14 +9,17 @@ import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
 import javafx.stage.Stage;
+import lombok.Getter;
 
 public class AacController {
     @FXML
     private Label displayText;
 
+    @Getter
     @FXML
     private GridPane leftGridPane;
 
+    @Getter
     @FXML
     private Pane rightPane;
 
@@ -24,13 +27,8 @@ public class AacController {
     private Button settingButton;
     @FXML
     private VBox VBoxContainer;
-    private MainComponent mainComponent;
-    private double lastWidth;
-    private double lastHeight;
-    private boolean isFullScreen;
 
     public void setMainComponent(MainComponent mainComponent) {
-        this.mainComponent = mainComponent;
     }
 
     public void resizeComponents(double width, double height) {
@@ -52,8 +50,7 @@ public class AacController {
 
         // Resize all child GridPanes in leftGridPane
         for (Node node : leftGridPane.getChildren()) {
-            if (node instanceof GridPane) {
-                GridPane categoryGrid = (GridPane) node;
+            if (node instanceof GridPane categoryGrid) {
                 categoryGrid.setPrefWidth(width * 0.18);
                 categoryGrid.setPrefHeight(height * 0.32);
 
@@ -68,7 +65,7 @@ public class AacController {
         }
 
         // Resize the cards grid in rightPane
-        GridPane cardsGrid = (GridPane) ((StackPane) rightPane).getChildren().get(0);
+        GridPane cardsGrid = (GridPane) rightPane.getChildren().get(0);
         cardsGrid.setPrefWidth(width * 0.32);
         cardsGrid.setPrefHeight(height * 0.65);
 
@@ -81,15 +78,18 @@ public class AacController {
         }
     }
 
-    public void setDisplayText(String text) {
-        if(text == null) {
-            text = "";
+    public void setDisplayText(String newText) {
+        if(newText == null) {
+            newText = "";
         }
-        if (this.displayText.getText() == ""){    // prevent indent for first word
-            this.displayText.setText(text);
+
+        String currentText = this.displayText.getText();
+
+        if (currentText.isEmpty()){    // prevent indent for first word
+            this.displayText.setText(newText);
         }
         else {
-            this.displayText.setText(this.displayText.getText() + " " + text);
+            this.displayText.setText(currentText + " " + newText);
         }
 
         this.displayText.setFont(Font.font("Verdana", FontPosture.REGULAR, 25));
@@ -100,18 +100,9 @@ public class AacController {
         this.displayText.setText("");
     }
 
-    public GridPane getLeftGridPane() {
-        return this.leftGridPane;
-    }
-
-    public Pane getRightPane() {
-        return this.rightPane;
-    }
-
     public void clickMenuButton(MouseEvent e){
-        SettingsEditor settingsEditor = new SettingsEditor();
         Stage stage = (Stage)((Node)e.getSource()).getScene().getWindow();
-        settingsEditor.start(stage);
+        new SettingsEditor().start(stage);
 
     }
 }

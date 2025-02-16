@@ -16,10 +16,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
-
 import java.io.File;
-import java.io.FileWriter;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,8 +25,9 @@ import java.util.Optional;
 public class SettingsEditor {
     private List<CategoryGroup> categoryGroups = new ArrayList<>();
     private VBox mainContainer;
-    private ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper = new ObjectMapper();
 
+    // MAIN METHOD
     public void start(Stage primaryStage) {
         primaryStage.setTitle("AAC Device Settings");
 
@@ -55,6 +53,223 @@ public class SettingsEditor {
         primaryStage.setFullScreen(true);
         primaryStage.show();
     }
+
+    private void loadData() {
+        try {
+            File file = getCategoryFile();
+            categoryGroups = mapper.readValue(file, new TypeReference<>() {
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert("Error loading data: " + e.getMessage(), null, Alert.AlertType.ERROR);
+        }
+    }
+
+    private void updateUI() {
+        mainContainer.getChildren().clear();
+
+        for (int groupIndex = 0; groupIndex < categoryGroups.size(); groupIndex++) {
+            CategoryGroup group = categoryGroups.get(groupIndex);
+            VBox groupBox = createGroupBox(group, groupIndex);
+            mainContainer.getChildren().add(groupBox);
+        }
+        HBox buttonContainer = getButtonContainer();
+        mainContainer.getChildren().add(buttonContainer);
+    }
+
+
+    // CREATE UI ELEMENTS
+    private VBox createGroupBox(CategoryGroup group, int groupIndex) {
+        // Settings Group Container
+        VBox groupBox = new VBox(10);
+        groupBox.getStyleClass().add("group-box");
+        groupBox.setStyle("-fx-border-color: #ddd; -fx-border-radius: 5; -fx-padding: 10;");
+        groupBox.prefWidthProperty().bind(mainContainer.widthProperty().subtract(20));
+
+        // Group header
+        HBox groupHeader = new HBox(10);
+        groupHeader.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
+        // Title
+        TextField groupTitle = new TextField(group.getTitle());
+        groupTitle.prefWidthProperty().bind(groupBox.widthProperty().multiply(0.5));
+        groupTitle.textProperty().addListener((obs, old, newValue) -> group.setTitle(newValue));
+
+        // Category Toggle Container
+        TitledPane groupPane = new TitledPane();
+        groupPane.setText("");
+        VBox categoriesBox = new VBox(5);
+        categoriesBox.prefWidthProperty().bind(groupBox.widthProperty().subtract(20));
+        groupPane.setContent(categoriesBox);
+
+        for (int categoryIndex = 0; categoryIndex < group.getCategories().size(); categoryIndex++) {
+            Category category = group.getCategories().get(categoryIndex);
+            VBox categoryBox = createCategoryBox(category, groupIndex, categoryIndex);
+            categoriesBox.getChildren().add(categoryBox);
+        }
+
+        // Add Category Button
+        Button addCategoryButton = getAddCategoryButton(group, groupIndex, categoriesBox);
+
+        // CategoryGroup Buttons
+        HBox categoryGroupControlButtons = new HBox(5);
+        // Add CategoryGroup Button 
+        Button addCategoryGroupButton = getAddCategoryGroupButton(groupIndex);  
+        categoryGroupControlButtons.getChildren().add(addCategoryGroupButton);  
+        // Delete CategoryGroup Button
+        Button deleteCategoryGroupButton = getDeleteCategoryGroupButton(groupIndex);
+        categoryGroupControlButtons.getChildren().add(deleteCategoryGroupButton);
+
+        // Add to layout
+        groupHeader.getChildren().addAll(groupTitle, addCategoryButton); // Top row
+        groupBox.getChildren().addAll(groupHeader, groupPane, categoryGroupControlButtons); // Bottom row 
+
+        return groupBox;
+    }
+
+    private VBox createCategoryBox(Category category, int groupIndex, int categoryIndex) {
+        VBox categoryBox = new VBox(5);
+        categoryBox.setStyle("-fx-padding: 5;");
+
+        // Category header
+        HBox categoryHeader = new HBox(10);
+        TextField categoryTitle = new TextField(category.getTitle());
+        TextField categoryImage = new TextField(category.getImageFile());
+
+        // Dynamic scaling
+        categoryTitle.prefWidthProperty().bind(categoryBox.widthProperty().multiply(0.4));
+        categoryImage.prefWidthProperty().bind(categoryBox.widthProperty().multiply(0.4));
+
+        // TextField Listeners
+        categoryTitle.textProperty().addListener((obs, old, newValue) -> category.setTitle(newValue));
+        categoryImage.textProperty().addListener((obs, old, newValue) -> category.setImageFile(newValue));
+
+        // Category Content Container
+        TitledPane categoryPane = new TitledPane();
+        VBox cardsBox = new VBox(5);
+        categoryPane.setContent(cardsBox);
+
+        // Add cards
+        for (int cardIndex = 0; cardIndex < category.getCards().size(); cardIndex++) {
+            Card card = category.getCards().get(cardIndex);
+            HBox cardBox = createCardBox(card, groupIndex, categoryIndex, cardIndex);
+            cardsBox.getChildren().add(cardBox);
+        }
+
+        // Add card button
+        Button addCardButton = getAddCardButton(cardsBox,category, groupIndex, categoryIndex);
+
+        // Delete category button
+        Button deleteCategoryButton = getDeleteCategoryButton(groupIndex, categoryIndex);
+
+        // Add to layout
+        categoryHeader.getChildren().addAll(categoryTitle, categoryImage, deleteCategoryButton); // Top row
+        categoryBox.getChildren().addAll(categoryHeader, categoryPane, addCardButton); // Bottom row
+        return categoryBox;
+    }
+
+    private HBox createCardBox(Card card, int groupIndex, int categoryIndex, int cardIndex) {
+        // Card Container
+        HBox cardBox = new HBox(5);
+        cardBox.setStyle("-fx-padding: 5;");//
+
+        // Card Text Fields
+        TextField cardTitle = new TextField(card.getTitle());
+        TextField cardText = new TextField(card.getText());
+        TextField cardImage = new TextField(card.getImageFile());
+
+        // TextField Listeners
+        cardTitle.textProperty().addListener((obs, old, newValue) -> card.setTitle(newValue));
+        cardText.textProperty().addListener((obs, old, newValue) -> card.setText(newValue));
+        cardImage.textProperty().addListener((obs, old, newValue) -> card.setImageFile(newValue));
+
+        // Dynamic scaling
+        HBox.setHgrow(cardTitle, Priority.ALWAYS);
+        HBox.setHgrow(cardText, Priority.ALWAYS);
+        HBox.setHgrow(cardImage, Priority.ALWAYS);
+
+        // Delete card button
+        Button deleteButton = getDeleteCardButton(groupIndex, categoryIndex, cardIndex);
+
+        cardBox.getChildren().addAll(cardTitle, cardText, cardImage, deleteButton);
+        return cardBox;
+    }
+
+
+    // ADD/DELETE UI ELEMENTS
+    private Button getAddCategoryButton(CategoryGroup group, int groupIndex, VBox categoriesBox) {
+        Button addCategoryButton = new Button("Add Category");
+        addCategoryButton.setOnAction(e -> {
+            Category newCategory = new Category();
+            newCategory.setTitle("New Category");
+            newCategory.setCards(new ArrayList<>());
+            group.getCategories().add(newCategory);
+            int categoryIndex = group.getCategories().size() - 1;
+            VBox categoryBox = createCategoryBox(newCategory, groupIndex, categoryIndex);
+            categoriesBox.getChildren().add(categoryBox);
+        });
+        return addCategoryButton;
+    }
+
+    private Button getDeleteCategoryButton(int groupIndex, int categoryIndex) {
+        Button deleteCategoryButton = new Button("Delete Category");
+        deleteCategoryButton.setOnAction(e -> {
+            Stage settingsStage = (Stage) ((Node) e.getSource()).getScene().getWindow();
+            if (deleteAlert("category", settingsStage)){
+                categoryGroups.get(groupIndex).getCategories().remove(categoryIndex);
+                updateUI();
+            }
+        });
+        return deleteCategoryButton;
+    }
+
+    private Button getAddCategoryGroupButton(int groupIndex){
+        Button addButton = new Button("Add Category Group");
+        addButton.setOnAction(e -> {
+            CategoryGroup newCategoryGroup = new CategoryGroup();
+            newCategoryGroup.setTitle("New Category Group");
+            newCategoryGroup.setCategories(new ArrayList<>());
+            int newCategoryGroupIndex = groupIndex + 1;
+            categoryGroups.add(newCategoryGroupIndex, newCategoryGroup);
+            updateUI();
+        });
+        return addButton;
+    }
+
+    private Button getDeleteCategoryGroupButton(int groupIndex){
+        Button deleteButton = new Button("Delete Category Group");
+        deleteButton.setOnAction(e -> {
+            Stage settingsStage = (Stage) ((Node) e.getSource()).getScene().getWindow();
+            if (deleteAlert("category group", settingsStage)){
+                categoryGroups.remove(groupIndex);
+                updateUI();
+            }
+            settingsStage.setFullScreen(true);
+        });
+        return deleteButton;
+    }
+
+    private Button getAddCardButton(VBox cardsBox, Category category, int groupIndex, int categoryIndex){
+        Button addButton = new Button("Add Card");
+        addButton.setOnAction(e -> {
+            Card newCard = new Card();
+            category.getCards().add(newCard);
+            HBox cardBox = createCardBox(newCard, groupIndex, categoryIndex, category.getCards().size() - 1);
+            cardsBox.getChildren().add(cardBox);
+        });
+        return addButton;
+    }
+
+    private Button getDeleteCardButton(int groupIndex, int categoryIndex, int cardIndex){
+        Button deleteButton = new Button("Delete Card");
+        deleteButton.setOnAction(e -> {
+            categoryGroups.get(groupIndex).getCategories().get(categoryIndex).getCards().remove(cardIndex);
+            updateUI();
+        });
+        return deleteButton;
+    }   
+
+    // CANCEL/SAVE UI ELEMENT CHANGES
     private HBox getButtonContainer(){
         // Bottom buttons
         HBox buttonContainer = new HBox(10);
@@ -79,93 +294,35 @@ public class SettingsEditor {
         return buttonContainer;
     }
 
-    private void loadData() {
+    private void cancel(ActionEvent event) {
+        Stage stage = (Stage)((Node)event.getSource()).getScene().getWindow();
+        SceneFactory.createMainWindow(stage);
+    }
+
+    private void saveChanges(ActionEvent event) {
+        Stage settingsStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+
         try {
             File file = getCategoryFile();
-            categoryGroups = mapper.readValue(file, new TypeReference<>() {
-            });
+            mapper.writeValue(file, categoryGroups);
+            showAlert("Changes saved successfully!", settingsStage, Alert.AlertType.INFORMATION);
+            SceneFactory.createMainWindow(settingsStage);
         } catch (Exception e) {
-            e.printStackTrace();
-            showAlert("Error loading data: " + e.getMessage());
+            showAlert("Error saving changes: " + e.getMessage(), settingsStage, Alert.AlertType.ERROR);
         }
     }
 
-    private void updateUI() {
-        mainContainer.getChildren().clear();
 
-        for (int groupIndex = 0; groupIndex < categoryGroups.size(); groupIndex++) {
-            CategoryGroup group = categoryGroups.get(groupIndex);
-            VBox groupBox = createGroupBox(group, groupIndex);
-            mainContainer.getChildren().add(groupBox);
+    // ALERT METHODS
+    private void showAlert(String message, Stage owner, Alert.AlertType type) {
+        Alert alert = new Alert(type);
+        if (owner != null) {
+            alert.initOwner(owner);
         }
-        HBox buttonContainer = getButtonContainer();
-        mainContainer.getChildren().add(buttonContainer);
-    }
-
-    private VBox createGroupBox(CategoryGroup group, int groupIndex) {
-        VBox groupBox = new VBox(10);
-        groupBox.getStyleClass().add("group-box");
-        groupBox.setStyle("-fx-border-color: #ddd; -fx-border-radius: 5; -fx-padding: 10;");
-        groupBox.prefWidthProperty().bind(mainContainer.widthProperty().subtract(20));
-
-        // Group header
-        HBox groupHeader = new HBox(10);
-        groupHeader.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-
-        // Title
-        TextField groupTitle = new TextField(group.getTitle());
-        groupTitle.prefWidthProperty().bind(groupBox.widthProperty().multiply(0.5));
-        groupTitle.textProperty().addListener((obs, old, newValue) -> group.setTitle(newValue));
-
-        TitledPane groupPane = new TitledPane();
-        groupPane.setText("");
-        VBox categoriesBox = new VBox(5);
-        categoriesBox.prefWidthProperty().bind(groupBox.widthProperty().subtract(20));
-        groupPane.setContent(categoriesBox);
-
-        for (int categoryIndex = 0; categoryIndex < group.getCategories().size(); categoryIndex++) {
-            Category category = group.getCategories().get(categoryIndex);
-            VBox categoryBox = createCategoryBox(category, groupIndex, categoryIndex);
-            categoriesBox.getChildren().add(categoryBox);
-        }
-
-        // Add Category Button
-        Button addCategoryButton = new Button("Add Category");
-        addCategoryButton.setOnAction(e -> {
-            Category newCategory = new Category();
-            newCategory.setTitle("New Category");
-            newCategory.setCards(new ArrayList<>());
-            group.getCategories().add(newCategory);
-            int categoryIndex = group.getCategories().size() - 1;
-            VBox categoryBox = createCategoryBox(newCategory, groupIndex, categoryIndex);
-            categoriesBox.getChildren().add(categoryBox);
-        });
-
-        // CategoryGroup Buttons
-        HBox categoryGroupControlButtons = new HBox(5);
-
-        // Add CategoryGroup Button
-        Button addCategoryGroupButton = new Button("Add Category Group");
-        addCategoryGroupButton(addCategoryGroupButton, groupIndex);
-        categoryGroupControlButtons.getChildren().add(addCategoryGroupButton);
-
-        // Delete CategoryGroup Button
-        Button deleteCategoryGroupButton = new Button("Delete Category Group");
-        deleteCategoryGroupButton.setOnAction(e -> {
-            Stage settingsStage = (Stage) ((Node) e.getSource()).getScene().getWindow();
-            if (deleteAlert("category group", settingsStage)){
-                categoryGroups.remove(groupIndex);
-                updateUI();
-            }
-
-            settingsStage.setFullScreen(true);
-        });
-        categoryGroupControlButtons.getChildren().add(deleteCategoryGroupButton);
-
-        groupHeader.getChildren().addAll(groupTitle, addCategoryButton);
-        groupBox.getChildren().addAll(groupHeader, groupPane, categoryGroupControlButtons);
-
-        return groupBox;
+        alert.setTitle(type == Alert.AlertType.ERROR ? "Error" : "Information");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
     private boolean deleteAlert (String navigationLevel, Stage settingsStage){
@@ -179,142 +336,10 @@ public class SettingsEditor {
 
         Optional<ButtonType> result = alert.showAndWait();
 
-        if (result.get() == ButtonType.OK) {
-            return true;
-        }
-        else{
-            return false;
-        }
-    }
-    private void addCategoryGroupButton(Button addButton, int groupIndex){
-        addButton.setOnAction(e -> {
-            CategoryGroup newCategoryGroup = new CategoryGroup();
-            newCategoryGroup.setTitle("New Category Group");
-            newCategoryGroup.setCategories(new ArrayList<>());
-            int newCategoryGroupIndex = groupIndex + 1;
-            categoryGroups.add(newCategoryGroupIndex, newCategoryGroup);
-            updateUI();
-        });
-    }
-    private VBox createCategoryBox(Category category, int groupIndex, int categoryIndex) {
-        VBox categoryBox = new VBox(5);
-        categoryBox.setStyle("-fx-padding: 5;");
-
-        // Category header
-        HBox categoryHeader = new HBox(10);
-        TextField categoryTitle = new TextField(category.getTitle());
-        TextField categoryImage = new TextField(category.getImageFile());
-
-        // Dynamic scaling
-        categoryTitle.prefWidthProperty().bind(categoryBox.widthProperty().multiply(0.4));
-        categoryImage.prefWidthProperty().bind(categoryBox.widthProperty().multiply(0.4));
-
-        categoryTitle.textProperty().addListener((obs, old, newValue) -> category.setTitle(newValue));
-        categoryImage.textProperty().addListener((obs, old, newValue) -> category.setImageFile(newValue));
-
-        TitledPane categoryPane = new TitledPane();
-        VBox cardsBox = new VBox(5);
-        categoryPane.setContent(cardsBox);
-
-        // Add cards
-        for (int cardIndex = 0; cardIndex < category.getCards().size(); cardIndex++) {
-            Card card = category.getCards().get(cardIndex);
-            HBox cardBox = createCardBox(card, groupIndex, categoryIndex, cardIndex);
-            cardsBox.getChildren().add(cardBox);
-        }
-
-        // Add card button
-        Button addCardButton = new Button("Add Card");
-        addCardButton.setOnAction(e -> {
-            Card newCard = new Card();
-            category.getCards().add(newCard);
-            HBox cardBox = createCardBox(newCard, groupIndex, categoryIndex, category.getCards().size() - 1);
-            cardsBox.getChildren().add(cardBox);
-        });
-
-
-        // Delete category button
-        Button deleteCategoryButton = new Button("Delete Category");
-        deleteCategoryButton.setOnAction(e -> {
-            Stage settingsStage = (Stage) ((Node) e.getSource()).getScene().getWindow();
-            if (deleteAlert("category", settingsStage)){
-                categoryGroups.get(groupIndex).getCategories().remove(categoryIndex);
-                updateUI();
-            }
-        });
-
-        categoryHeader.getChildren().addAll(categoryTitle, categoryImage, deleteCategoryButton);
-        categoryBox.getChildren().addAll(categoryHeader, categoryPane, addCardButton);
-        return categoryBox;
+        return result.get() == ButtonType.OK;
     }
 
-    private HBox createCardBox(Card card, int groupIndex, int categoryIndex, int cardIndex) {
-        HBox cardBox = new HBox(5);
-        cardBox.setStyle("-fx-padding: 5;");//
 
-        TextField cardTitle = new TextField(card.getTitle());
-        TextField cardText = new TextField(card.getText());
-        TextField cardImage = new TextField(card.getImageFile());
-
-        // Dynamic scaling
-        HBox.setHgrow(cardTitle, Priority.ALWAYS);
-        HBox.setHgrow(cardText, Priority.ALWAYS);
-        HBox.setHgrow(cardImage, Priority.ALWAYS);
-
-        cardTitle.textProperty().addListener((obs, old, newValue) -> card.setTitle(newValue));
-        cardText.textProperty().addListener((obs, old, newValue) -> card.setText(newValue));
-        cardImage.textProperty().addListener((obs, old, newValue) -> card.setImageFile(newValue));
-
-        Button deleteButton = new Button("Delete");
-        deleteButton.setOnAction(e -> {
-            categoryGroups.get(groupIndex).getCategories().get(categoryIndex).getCards().remove(cardIndex);
-            updateUI();
-        });
-
-        cardBox.getChildren().addAll(cardTitle, cardText, cardImage, deleteButton);
-        return cardBox;
-    }
-
-    private void saveChanges(ActionEvent event) {
-        Stage settingsStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-
-        try {
-            String jsonString = mapper.writeValueAsString(categoryGroups);
-            File file = getCategoryFile();
-            try(FileWriter writer = new FileWriter(file)) {
-                writer.write(jsonString);
-                writer.flush();
-            }
-            showAlert("Changes saved successfully!", settingsStage);
-        } catch (Exception e) {
-            showAlert("Error saving changes: " + e.getMessage());
-        }
-
-        Stage stage = (Stage)((Node)event.getSource()).getScene().getWindow();
-        SceneFactory.createMainWindow(stage);
-    }
-
-    private void cancel(ActionEvent event) {
-        Stage stage = (Stage)((Node)event.getSource()).getScene().getWindow();
-        SceneFactory.createMainWindow(stage);
-    }
-
-    private void showAlert(String message, Stage stage) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.initOwner(stage);
-        alert.setTitle("Information");
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
-
-    private void showAlert(String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("ERROR");
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
 
     private File getCategoryFile() throws URISyntaxException {
         String directory = SettingsEditor.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
