@@ -19,7 +19,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
-
 import java.util.List;
 import java.util.Timer;
 
@@ -204,7 +203,7 @@ public class MainComponent {
         }
     }
 
-    // Clear textbox text
+    // Clear text in textbox
     private void clearText() {
         this.aacController.setDisplayText();
     }

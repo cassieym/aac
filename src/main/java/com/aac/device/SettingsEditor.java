@@ -5,7 +5,6 @@ import com.aac.device.model.Category;
 import com.aac.device.model.CategoryGroup;
 import com.aac.device.utils.CategoryCardLoader;
 import com.aac.device.utils.SceneFactory;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
@@ -17,8 +16,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import java.io.File;
-import java.net.URISyntaxException;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -251,10 +249,12 @@ public class SettingsEditor {
     private Button getAddCardButton(VBox cardsBox, Category category, int groupIndex, int categoryIndex){
         Button addButton = new Button("Add Card");
         addButton.setOnAction(e -> {
+            Stage settingsStage = (Stage) ((Node)e.getSource()).getScene().getWindow();
             Card newCard = new Card();
             category.getCards().add(newCard);
             HBox cardBox = createCardBox(newCard, groupIndex, categoryIndex, category.getCards().size() - 1);
             cardsBox.getChildren().add(cardBox);
+            showAlert("Caution: Card URL/file must end in .jpg or .png to work", settingsStage, Alert.AlertType.INFORMATION);
         });
         return addButton;
     }

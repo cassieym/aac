@@ -10,8 +10,6 @@ import lombok.Setter;
 import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 @Data
 public class GridCell {
@@ -49,9 +47,8 @@ public class GridCell {
                         inputStream = new FileInputStream(file);
                         image = new Image(inputStream);
                     }
-                    else {
-                        // maybe this is online image
-                        // first check whether there is a local copy of the online image
+                    else { // online image
+                        // first check whether there already is a local copy of the online image
                         String imageDirPath = getLocalImageFileDirectory();
                         String cleanedCellTitle = cellTitle.replaceAll(" ", "_").toLowerCase();
                         String localImageFile = imageDirPath + File.separator + cleanedCellTitle + ".png";
@@ -60,14 +57,14 @@ public class GridCell {
                             inputStream = new FileInputStream(file);
                             image = new Image(inputStream);
                         }
-                        else {
-                            // Download the image from online/internet
+                        else { // local copy doesn't exist
+                            // Download the online image
                             URL url = new URL(this.imageFile);
                             URLConnection conn = url.openConnection();
                             InputStream in = conn.getInputStream();
                             image = new Image(in);
 
-                            // Save the image from online to local file
+                            // Save the online image to local file
                             saveImage(imageFile, localImageFile);
                         }
                     }
