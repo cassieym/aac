@@ -1,6 +1,7 @@
 package com.aac.device.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import javafx.scene.control.Alert;
 import javafx.scene.image.Image;
 import lombok.AccessLevel;
 import lombok.Data;

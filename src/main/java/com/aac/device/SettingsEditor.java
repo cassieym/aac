@@ -254,7 +254,6 @@ public class SettingsEditor {
             category.getCards().add(newCard);
             HBox cardBox = createCardBox(newCard, groupIndex, categoryIndex, category.getCards().size() - 1);
             cardsBox.getChildren().add(cardBox);
-            showAlert("Caution: Card URL/file must end in .jpg or .png to work", settingsStage, Alert.AlertType.INFORMATION);
         });
         return addButton;
     }
